@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Common.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250219182116_fixup")]
-    partial class fixup
+    [Migration("20250320211500_InitialCommit")]
+    partial class InitialCommit
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -187,6 +187,49 @@ namespace Common.Migrations
                     b.ToTable("custom_vocabularies", (string)null);
                 });
 
+            modelBuilder.Entity("Common.Types.MeetingDocuments.MeetingDocumentDatabaseType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Filename")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("filename");
+
+                    b.Property<Guid>("MeetingId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("meeting_id");
+
+                    b.Property<Guid>("TeamId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("team_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MeetingId");
+
+                    b.HasIndex("TeamId");
+
+                    b.ToTable("meeting_documents", (string)null);
+                });
+
             modelBuilder.Entity("Common.Types.MeetingPromptResponses.MeetingPromptResponseDatabaseType", b =>
                 {
                     b.Property<Guid>("Id")
@@ -202,7 +245,10 @@ namespace Common.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("MeetingId");
 
-                    b.Property<Guid?>("PromptId")
+                    b.Property<string>("Prompt")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("PromptDatabaseTypeId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("PromptResponse")
@@ -222,7 +268,7 @@ namespace Common.Migrations
 
                     b.HasIndex("MeetingId");
 
-                    b.HasIndex("PromptId");
+                    b.HasIndex("PromptDatabaseTypeId");
 
                     b.HasIndex("TeamId");
 
@@ -270,6 +316,12 @@ namespace Common.Migrations
                     b.Property<string>("MeetingNotes")
                         .HasColumnType("text")
                         .HasColumnName("meeting_notes");
+
+                    b.Property<int?>("MeetingNotesVersion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1)
+                        .HasColumnName("meeting_notes_version");
 
                     b.Property<string>("PreSignedUrl")
                         .HasMaxLength(4096)
@@ -352,11 +404,9 @@ namespace Common.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<string>("BedrockModelId")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("bedrock_model_id");
+                    b.Property<bool?>("CreatePromptsFromDescription")
+                        .HasColumnType("boolean")
+                        .HasColumnName("create_prompts_from_description");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -407,13 +457,18 @@ namespace Common.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
                         .HasColumnName("description");
 
                     b.Property<Guid?>("MeetingPromptResponseId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("Order")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1)
+                        .HasColumnName("order");
 
                     b.Property<Guid>("PrompSetId")
                         .HasColumnType("uuid")
@@ -548,6 +603,25 @@ namespace Common.Migrations
                     b.Navigation("Team");
                 });
 
+            modelBuilder.Entity("Common.Types.MeetingDocuments.MeetingDocumentDatabaseType", b =>
+                {
+                    b.HasOne("Common.Types.Meetings.MeetingDatabaseType", "Meeting")
+                        .WithMany("MeetingDocuments")
+                        .HasForeignKey("MeetingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Common.Types.Teams.TeamDatabaseType", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Meeting");
+
+                    b.Navigation("Team");
+                });
+
             modelBuilder.Entity("Common.Types.MeetingPromptResponses.MeetingPromptResponseDatabaseType", b =>
                 {
                     b.HasOne("Common.Types.Meetings.MeetingDatabaseType", "Meeting")
@@ -556,9 +630,9 @@ namespace Common.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Common.Types.Prompts.PromptDatabaseType", "Prompt")
+                    b.HasOne("Common.Types.Prompts.PromptDatabaseType", null)
                         .WithMany("MeetingPromptResponses")
-                        .HasForeignKey("PromptId");
+                        .HasForeignKey("PromptDatabaseTypeId");
 
                     b.HasOne("Common.Types.Teams.TeamDatabaseType", "Team")
                         .WithMany("MeetingPromptResponses")
@@ -568,8 +642,6 @@ namespace Common.Migrations
 
                     b.Navigation("Meeting");
 
-                    b.Navigation("Prompt");
-
                     b.Navigation("Team");
                 });
 
@@ -578,12 +650,12 @@ namespace Common.Migrations
                     b.HasOne("Common.Types.CustomModels.CustomModelDatabaseType", "CustomModel")
                         .WithMany("Meetings")
                         .HasForeignKey("CustomModelId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("Common.Types.CustomVocabularies.CustomVocabularyDatabaseType", "CustomVocabulary")
                         .WithMany("Meetings")
                         .HasForeignKey("CustomVocabularyId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("Common.Types.PromptSets.PromptSetDatabaseType", "PromptSet")
                         .WithMany("Meetings")
@@ -620,7 +692,7 @@ namespace Common.Migrations
                     b.HasOne("Common.Types.PromptSets.PromptSetDatabaseType", "PromptSet")
                         .WithMany("Prompts")
                         .HasForeignKey("PrompSetId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Common.Types.Teams.TeamDatabaseType", "Team")
@@ -665,6 +737,8 @@ namespace Common.Migrations
 
             modelBuilder.Entity("Common.Types.Meetings.MeetingDatabaseType", b =>
                 {
+                    b.Navigation("MeetingDocuments");
+
                     b.Navigation("MeetingPromptResponses");
                 });
 

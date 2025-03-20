@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Common.Migrations
 {
     /// <inheritdoc />
-    public partial class initial : Migration
+    public partial class InitialCommit : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -97,10 +97,10 @@ namespace Common.Migrations
                     TeamId = table.Column<Guid>(type: "uuid", nullable: true),
                     prompt_set_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     description = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    bedrock_model_id = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    status = table.Column<int>(type: "integer", maxLength: 3, nullable: false, defaultValue: 0)
+                    status = table.Column<int>(type: "integer", maxLength: 3, nullable: false, defaultValue: 0),
+                    create_prompts_from_description = table.Column<bool>(type: "boolean", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -167,6 +167,7 @@ namespace Common.Migrations
                     s3_output_key_name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
                     transcribe_error = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: true),
                     meeting_notes = table.Column<string>(type: "text", nullable: true),
+                    meeting_notes_version = table.Column<int>(type: "integer", nullable: true, defaultValue: 1),
                     IncludeInModelTraining = table.Column<bool>(type: "boolean", nullable: true),
                     MeetingAnalyticsPayload = table.Column<JsonDocument>(type: "jsonb", nullable: true)
                 },
@@ -178,13 +179,13 @@ namespace Common.Migrations
                         column: x => x.custom_model_id,
                         principalTable: "custom_models",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "FK_meetings_custom_vocabularies_custom_vocabulary_id",
                         column: x => x.custom_vocabulary_id,
                         principalTable: "custom_vocabularies",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "FK_meetings_promptsets_PromptSetId",
                         column: x => x.PromptSetId,
@@ -208,10 +209,11 @@ namespace Common.Migrations
                     MeetingPromptResponseId = table.Column<Guid>(type: "uuid", nullable: true),
                     TeamId = table.Column<Guid>(type: "uuid", nullable: true),
                     prompt = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    description = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    description = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    status = table.Column<int>(type: "integer", maxLength: 3, nullable: false, defaultValue: 0)
+                    status = table.Column<int>(type: "integer", maxLength: 3, nullable: false, defaultValue: 0),
+                    order = table.Column<int>(type: "integer", nullable: false, defaultValue: 1)
                 },
                 constraints: table =>
                 {
@@ -221,7 +223,7 @@ namespace Common.Migrations
                         column: x => x.prompt_set_id,
                         principalTable: "promptsets",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_prompts_teams_TeamId",
                         column: x => x.TeamId,
@@ -230,16 +232,46 @@ namespace Common.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "meeting_documents",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    description = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    team_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    meeting_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    filename = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_meeting_documents", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_meeting_documents_meetings_meeting_id",
+                        column: x => x.meeting_id,
+                        principalTable: "meetings",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_meeting_documents_teams_team_id",
+                        column: x => x.team_id,
+                        principalTable: "teams",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "meeting_prompt_responses",
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Prompt = table.Column<string>(type: "text", nullable: true),
                     prompt_response = table.Column<string>(type: "text", nullable: false),
                     TeamId = table.Column<Guid>(type: "uuid", nullable: false),
                     MeetingId = table.Column<Guid>(type: "uuid", nullable: false),
-                    PromptId = table.Column<Guid>(type: "uuid", nullable: true),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    PromptDatabaseTypeId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -251,8 +283,8 @@ namespace Common.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_meeting_prompt_responses_prompts_PromptId",
-                        column: x => x.PromptId,
+                        name: "FK_meeting_prompt_responses_prompts_PromptDatabaseTypeId",
+                        column: x => x.PromptDatabaseTypeId,
                         principalTable: "prompts",
                         principalColumn: "id");
                     table.ForeignKey(
@@ -274,14 +306,24 @@ namespace Common.Migrations
                 column: "TeamId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_meeting_documents_meeting_id",
+                table: "meeting_documents",
+                column: "meeting_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_meeting_documents_team_id",
+                table: "meeting_documents",
+                column: "team_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_meeting_prompt_responses_MeetingId",
                 table: "meeting_prompt_responses",
                 column: "MeetingId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_meeting_prompt_responses_PromptId",
+                name: "IX_meeting_prompt_responses_PromptDatabaseTypeId",
                 table: "meeting_prompt_responses",
-                column: "PromptId");
+                column: "PromptDatabaseTypeId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_meeting_prompt_responses_TeamId",
@@ -337,6 +379,9 @@ namespace Common.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "meeting_documents");
+
             migrationBuilder.DropTable(
                 name: "meeting_prompt_responses");
 

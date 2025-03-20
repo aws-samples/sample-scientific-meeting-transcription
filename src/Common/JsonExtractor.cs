@@ -12,10 +12,8 @@ public static class JsonExtractor
     {
         try
         {
-            AppDomain domain = AppDomain.CurrentDomain;
-            domain.SetData("REGEX_DEFAULT_MATCH_TIMEOUT", TimeSpan.FromSeconds(2));
-            // Match pattern for JSON content - matches everything between { and } and []
-            var match = Regex.Match(text, @"(?:\{|\[)[\s\S]*(?:\}|\])");
+            var regex = new Regex(@"(?:\{|\[)[\s\S]*(?:\}|\])", RegexOptions.None, TimeSpan.FromSeconds(2));
+            var match = regex.Match(text);
             if (!match.Success)
             {
                 return default;
@@ -35,9 +33,8 @@ public static class JsonExtractor
     {
         try
         {
-            AppDomain domain = AppDomain.CurrentDomain;
-            domain.SetData("REGEX_DEFAULT_MATCH_TIMEOUT", TimeSpan.FromSeconds(2));
-            var match = Regex.Match(text, @"(?:\{|\[)[\s\S]*(?:\}|\])");
+            var regex = new Regex(@"(?:\{|\[)[\s\S]*(?:\}|\])", RegexOptions.None, TimeSpan.FromSeconds(2));
+            var match = regex.Match(text);
             if (!match.Success)
             {
                 return null;
