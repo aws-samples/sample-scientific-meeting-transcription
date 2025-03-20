@@ -13,7 +13,7 @@ namespace Common
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
 
             // Use a development connection string for migrations
-            var connectionString = "server=localhost;port=3306;database=dummy;Username=dummy;password=dummy";
+            var connectionString = "dummyconnection";
 
             optionsBuilder.UseNpgsql(connectionString);
             Console.WriteLine(connectionString);

@@ -115,7 +115,7 @@ public sealed class ApplicationDbContext : DbContext
             }
             else
             {
-                var connectionString = "server=localhost;port=3306;database=dummy;Username=dummy;password=dummy";
+                var connectionString = "dummyconnection";
                 optionsBuilder.UseNpgsql(connectionString);
             }
         }
