@@ -297,13 +297,10 @@ class CustomModelWorkflow(Construct):
             suppressions=[
                 {
                     "id": "AwsSolutions-IAM5",
-                    "reason": "CDK created role for StepFunction"
+                    "reason": "Default CDK created role for StepFunction"
                 }
             ]
         )
-
-
-
     
         securityConstruct.stepfunction_lambda_service_role.grant(self.state_machine.role, "lambda:InvokeFunction")
         storageConstruct.transcribe_role.grant_assume_role(self.state_machine)

@@ -44,7 +44,7 @@ NagSuppressions.add_stack_suppressions(app.node.find_child("ExscriboStack"), [
     
     {
         "id": "AwsSolutions-IAM5",
-        "reason": "Storage access to S3 is required for a range of services",
+        "reason": "Default Policy for CDK grant_read_write access. Storage access to S3 is required for a range of services and limited to /teams* prefix",
         "appliesTo": [
             {
                 "regex" :  "/ExscriboStorageWorkingS3Bucket/"

@@ -99,11 +99,6 @@ class ApiConstruct(Construct):
         promptWorkflowConstruct.state_machine.grant_start_execution(self.exscribo_lambda.grant_principal)
         sealMeetingWorkflowConstruct.state_machine.grant_start_execution(self.exscribo_lambda.grant_principal)
 
-
-        storageConstruct.s3bucket.grant_delete(self.exscribo_lambda.grant_principal,"teams/*")
-        storageConstruct.s3bucket.grant_put(self.exscribo_lambda.grant_principal,"teams/*") 
-        storageConstruct.s3bucket.grant_read_write(self.exscribo_lambda.grant_principal,"teams/*")    
-
         databaseConstruct.db_credentials.grant_read(self.exscribo_lambda.grant_principal)
         self.api_lambda_log_group.grant_write(self.exscribo_lambda.grant_principal)
         securityConstruct.encryption_key.grant_decrypt(self.exscribo_lambda.grant_principal)

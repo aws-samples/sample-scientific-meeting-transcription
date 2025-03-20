@@ -54,12 +54,12 @@ class SecurityConstruct(Construct):
                     "id": "AwsSolutions-IAM4",
                     "reason": "StepFunction Lambda function requires exection and VPC access",
                     "appliesTo": [
-                        "Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
                         "Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
                     ]
                 }
             ]
         )
+
 
 
         # Add Transcribe permissions

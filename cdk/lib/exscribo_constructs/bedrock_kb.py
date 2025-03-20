@@ -152,8 +152,8 @@ class BedrockKBConstruct(Construct):
         )
 
         vectorCollection.grant_data_access(kb_role)
-        storageConstruct.s3bucket.grant_read_write(kb_role, "teams/*")
-        storageConstruct.s3bucket.grant_read_write(kb_role, "chunk-processor/*")
+        kb_role.add_to_policy(storageConstruct.s3_rw_statement)
+        kb_role.add_to_policy(storageConstruct.s3_list_statement)
 
         self.knowledge_base = aws_bedrock.CfnKnowledgeBase(
             self,

@@ -50,7 +50,7 @@ class CustomVocabularyWorkflow(Construct):
             suppressions=[
                 {
                     "id": "AwsSolutions-IAM5",
-                    "reason": "CDK created role for StepFunction"
+                    "reason": "Default CDK created role for StepFunction"
                 }
             ]
         )

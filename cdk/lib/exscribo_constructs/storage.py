@@ -58,16 +58,55 @@ class StorageConstruct(Construct):
             server_access_logs_bucket=self.logs_bucket,
             server_access_logs_prefix="working-bucket-logs/"
         )
-        
+
+
+        self.s3_list_statement = iam.PolicyStatement(
+                    effect=iam.Effect.ALLOW,
+                    actions=[
+                        "s3:ListBucket"
+                    ],
+                    resources=[
+                        f"arn:aws:s3:::{self.s3bucket.bucket_name}"
+                    ],
+                    conditions={
+                        "StringLike": {  
+                           "s3:prefix": ["teams/*", "chunk-processor/*"]  
+                        }
+                    }
+                )
+        self.s3_rw_statement = iam.PolicyStatement(
+                    effect=iam.Effect.ALLOW,
+                    actions=[
+                        "s3:PutObject",
+                        "s3:GetObject"
+                    ],
+                    resources=[
+                        f"arn:aws:s3:::{self.s3bucket.bucket_name}/teams/*",
+                        f"arn:aws:s3:::{self.s3bucket.bucket_name}/chunk-processor/*"
+                    ]
+                )        
+
+        self.s3_policy = iam.Policy(self, "S3Policy", 
+            policy_name="ExscriboS3Policy",
+            statements=[ self.s3_list_statement, self.s3_rw_statement ]
+        )        
+
         self.transcribe_role = iam.Role(
             self, "ExscriboTranscribeServiceRole",
-            assumed_by=iam.ServicePrincipal("transcribe.amazonaws.com")
+            assumed_by=iam.ServicePrincipal("transcribe.amazonaws.com"),
+            inline_policies={
+                "ExscriboS3Policy": iam.PolicyDocument(
+                    minimize=False,
+                    statements=[ self.s3_list_statement, self.s3_rw_statement ]
+                )
+            },
+            role_name="ExscriboTranscribeServiceRole"
         )
-        
+        securityConstruct.api_lambda_service_role.attach_inline_policy(self.s3_policy)
+        securityConstruct.stepfunction_lambda_service_role.attach_inline_policy(self.s3_policy)
+
         securityConstruct.encryption_key.grant_decrypt(self.transcribe_role)
-        self.s3bucket.grant_read_write(self.transcribe_role,"teams/*")
-        self.s3bucket.grant_read_write(securityConstruct.stepfunction_lambda_service_role,"teams/*")
-        self.s3bucket.grant_read_write(securityConstruct.api_lambda_service_role,"teams/*")
+
         
         # Store bucket names in Parameter Store
         self.s3_bucket_param = ssm.StringParameter(self, "S3BucketName",

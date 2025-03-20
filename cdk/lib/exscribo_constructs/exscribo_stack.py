@@ -164,7 +164,7 @@ class ExscriboStack(Stack):
             suppressions=[
                 {
                     "id": "AwsSolutions-IAM5",
-                    "reason": "CDK Created Default Policy",
+                    "reason": "Default CDK Created Default Policy",
                     "appliesTo": [
                         f"Action::kms:ReEncrypt*",
                         f"Resource::*",
@@ -184,13 +184,12 @@ class ExscriboStack(Stack):
                     "id": "AwsSolutions-IAM4",
                     "reason": "API Lambda function requires exection and VPC access",
                     "appliesTo": [
-                        "Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
                         "Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
                     ]
                 },
                 {
                     "id": "AwsSolutions-IAM5",
-                    "reason": "CDK Created Default Policy",
+                    "reason": "Default CDK Created Default Policy",
                     "appliesTo": [
                         "Action::kms:GenerateDataKey*",
                         "Action::kms:ReEncrypt*",
@@ -205,7 +204,7 @@ class ExscriboStack(Stack):
             suppressions=[
                 {
                     "id": "AwsSolutions-IAM4",
-                    "reason": "LogRetention CDK Default Policy",
+                    "reason": "Default LogRetention CDK Default Policy",
                     "appliesTo": [
                         "Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
                     ]
@@ -219,7 +218,7 @@ class ExscriboStack(Stack):
             suppressions=[
                 {
                     "id": "AwsSolutions-IAM5",
-                    "reason": "LogRetention CDK Default Policy",
+                    "reason": "Default LogRetention CDK Default Policy",
                     "appliesTo": [
                         "Resource::*",
                     ]

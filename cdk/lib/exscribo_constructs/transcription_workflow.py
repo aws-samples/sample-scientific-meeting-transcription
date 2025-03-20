@@ -211,7 +211,7 @@ class TranscribeAndPromptWorkflow(Construct):
             suppressions=[
                 {
                     "id": "AwsSolutions-IAM5",
-                    "reason": "CDK created role for StepFunction",
+                    "reason": "Default CDK created role for StepFunction decrypt key",
                     "appliesTo": [
                         "Action::kms:GenerateDataKey*",
                         "Action::kms:ReEncrypt*"
@@ -226,7 +226,7 @@ class TranscribeAndPromptWorkflow(Construct):
             suppressions=[
                 {
                     "id": "AwsSolutions-IAM5",
-                    "reason": "CDK created role for StepFunction"
+                    "reason": "Default Default CDK created role for StepFunction"
                 }
             ]
         )
