@@ -50,9 +50,7 @@ namespace Common.Types.Meetings
         public virtual string MeetingNotesVersionLocation => $"teams/{TeamId}/meetings/{Id}/meeting_notes_{MeetingNotesVersion}.json";
         public virtual string MeetingNotesVersionLocationUpdate => $"teams/{TeamId}/meetings/{Id}/meeting_notes_{MeetingNotesVersion + 1}.json";
         public virtual string MeetingRecordingLocation => $"teams/{TeamId}/meetings/{Id}/recording/{Id}.mp4";
-
-        public void Dispose() => MeetingAnalyticsPayload?.Dispose();
-
+        
         public virtual List<CanPerformEnum> CanPerformValue
         {
             get
