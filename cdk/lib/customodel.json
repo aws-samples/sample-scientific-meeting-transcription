@@ -1,0 +1,156 @@
+{
+	"StartAt": "CheckActiveModels",
+	"States": {
+		"CheckActiveModels": {
+			"Next": "GetTrainingModelCount",
+			"Type": "Task",
+			"ResultPath": "$.activeModels",
+			"Resource": "arn:aws:states:::aws-sdk:transcribe:listLanguageModels",
+			"Parameters": {}
+		},
+		"GetTrainingModelCount": {
+			"Type": "Pass",
+			"Next": "CanProceedWithTraining?",
+			"Parameters": {
+				"count.$": "States.ArrayLength($.activeModels.Models[?(@.ModelStatus == 'IN_PROGRESS')])"
+			},
+			"ResultPath": "$.activeModels"
+		},
+		"WaitIfQueued": {
+			"Type": "Wait",
+			"Seconds": 60,
+			"Next": "CheckActiveModels"
+		},
+		"UpdateQueuedStatus": {
+			"Next": "WaitIfQueued",
+			"Retry": [
+				{
+					"ErrorEquals": [
+						"Lambda.ClientExecutionTimeoutException",
+						"Lambda.ServiceException",
+						"Lambda.AWSLambdaException",
+						"Lambda.SdkClientException"
+					],
+					"IntervalSeconds": 2,
+					"MaxAttempts": 6,
+					"BackoffRate": 2
+				}
+			],
+			"Type": "Task",
+			"Resource": "arn:aws:states:::lambda:invoke",
+			"Parameters": {
+				"FunctionName": "arn:aws:lambda:us-east-1:299129499635:function:custom_model_lambda_function",
+				"Payload": {
+					"id.$": "$.id",
+					"custom_model_progress_status": "TrainingQueued"
+				}
+			},
+			"ResultPath": null
+		},
+		"CanProceedWithTraining?": {
+			"Type": "Choice",
+			"Choices": [
+				{
+					"And": [
+						{
+							"Variable": "$.activeModels",
+							"IsPresent": true
+						},
+						{
+							"Variable": "$.activeModels",
+							"NumericLessThan": 2
+						}
+					],
+					"Next": "StartCustomLanguageModel"
+				}
+			],
+			"Default": "UpdateQueuedStatus"
+		},
+		"StartCustomLanguageModel": {
+			"Next": "WaitBeforeCheckingState",
+			"Type": "Task",
+			"ResultPath": "$.customModel",
+			"Resource": "arn:aws:states:::aws-sdk:transcribe:createLanguageModel",
+			"Parameters": {
+				"ModelName.$": "$.id",
+				"BaseModelName.$": "$.transcribe_base_model_name",
+				"InputDataConfig": {
+					"DataAccessRoleArn": "arn:aws:iam::299129499635:role/ExscriboStack-ExscriboStorageTranscribeServiceRole5-memKKFfcXgxO",
+					"S3Uri.$": "$.training_data_s3_uri_folder"
+				},
+				"LanguageCode.$": "$.language_code"
+			}
+		},
+		"WaitBeforeCheckingState": {
+			"Type": "Wait",
+			"Seconds": 10,
+			"Next": "CheckCustomModelStatus"
+		},
+		"CheckCustomModelStatus": {
+			"Next": "IsTrainingComplete?",
+			"Retry": [
+				{
+					"ErrorEquals": [
+						"ModelInUseException"
+					],
+					"IntervalSeconds": 120,
+					"MaxAttempts": 120,
+					"BackoffRate": 1.5
+				}
+			],
+			"Type": "Task",
+			"ResultPath": "$.modelStatus",
+			"Resource": "arn:aws:states:::aws-sdk:transcribe:describeLanguageModel",
+			"Parameters": {
+				"ModelName.$": "$.id"
+			}
+		},
+		"IsTrainingComplete?": {
+			"Type": "Choice",
+			"Choices": [
+				{
+					"Variable": "$.modelStatus.LanguageModel.ModelStatus",
+					"StringEquals": "COMPLETED",
+					"Next": "UpdateCustomModelStatus"
+				},
+				{
+					"Variable": "$.modelStatus.LanguageModel.ModelStatus",
+					"StringEquals": "FAILED",
+					"Next": "UpdateCustomModelStatus"
+				}
+			],
+			"Default": "WaitBeforeCheckingState"
+		},
+		"UpdateCustomModelStatus": {
+			"End": true,
+			"Retry": [
+				{
+					"ErrorEquals": [
+						"Lambda.ClientExecutionTimeoutException",
+						"Lambda.ServiceException",
+						"Lambda.AWSLambdaException",
+						"Lambda.SdkClientException"
+					],
+					"IntervalSeconds": 2,
+					"MaxAttempts": 6,
+					"BackoffRate": 2
+				}
+			],
+			"Type": "Task",
+			"Resource": "arn:aws:states:::lambda:invoke",
+			"Parameters": {
+				"FunctionName": "arn:aws:lambda:us-east-1:299129499635:function:custom_model_lambda_function",
+				"Payload": {
+					"id.$": "$.id",
+					"modelName.$": "$.id",
+					"modelStatus.$": "$.modelStatus.LanguageModel.ModelStatus",
+					"baseModelName.$": "$.transcribe_base_model_name",
+					"languageCode.$": "$.language_code",
+					"timestamp.$": "$$.State.EnteredTime"
+				}
+			}
+		}
+	},
+	"TimeoutSeconds": 43200,
+	"Comment": "Custom Language Model Training Workflow"
+}

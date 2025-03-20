@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "aws-cdk": "^2.1003.0",
+    "aws-cdk-lib": "^2.183.0",
+    "cdk-nag": "^2.35.44"
+  }
+}

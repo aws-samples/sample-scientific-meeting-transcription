@@ -1,0 +1,21 @@
+.v-field {
+  border-radius: 4px !important;
+}
+
+.v-text-field .v-field__outline__start,
+.v-text-field .v-field__outline__end,
+.v-text-field .v-field__outline__notch {
+  border-radius: 4px !important;
+}
+
+.v-select .v-field__outline__start,
+.v-select .v-field__outline__end,
+.v-select .v-field__outline__notch {
+  border-radius: 4px !important;
+}
+
+.v-textarea .v-field__outline__start,
+.v-textarea .v-field__outline__end,
+.v-textarea .v-field__outline__notch {
+  border-radius: 4px !important;
+}

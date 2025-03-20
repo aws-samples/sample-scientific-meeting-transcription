@@ -1,0 +1,17 @@
+.upload-zone {
+  border: 2px dashed #ccc;
+  border-radius: 4px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.upload-zone:hover {
+  border-color: #666;
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.upload-zone.dragover {
+  border-color: #2196F3;
+  background-color: rgba(33, 150, 243, 0.05);
+}

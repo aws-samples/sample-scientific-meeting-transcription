@@ -1,0 +1,85 @@
+"""
+ // Copyright © Amazon.com and Affiliates: This deliverable is considered Developed Content as defined in the AWS Service Terms
+ """
+
+from aws_cdk import (
+    aws_s3 as s3,
+    aws_ssm as ssm,
+    aws_iam as iam,
+    aws_ec2 as ec2,
+)
+from constructs import Construct
+from cdk_nag import NagSuppressions
+
+from exscribo_constructs.security import SecurityConstruct
+from exscribo_constructs.network import NetworkConstruct
+
+class StorageConstruct(Construct):
+    def __init__(self, scope: Construct,  id: str, 
+                 securityConstruct: SecurityConstruct,
+                 networkConstruct: NetworkConstruct):
+        super().__init__(scope, id)
+
+        # Create S3 logs bucket first with minimal dependencies
+        self.logs_bucket = s3.Bucket(self, "S3 Access Logs Bucket",
+            encryption=s3.BucketEncryption.KMS,
+            encryption_key=securityConstruct.encryption_key,
+            block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
+            # removal_policy=RemovalPolicy.DESTROY,
+            # auto_delete_objects=True,
+            versioned=True,
+            enforce_ssl=True,
+        )
+        
+        # Create VPC Flow Logs after logs bucket exists
+        flow_logs = ec2.FlowLog(
+            self, "VPCFlowLogs",
+            resource_type=ec2.FlowLogResourceType.from_vpc(networkConstruct.vpc),
+            destination=ec2.FlowLogDestination.to_s3(
+                bucket=self.logs_bucket,
+                key_prefix="vpcflows/"
+            )
+        )
+
+        # Create S3 bucket with server access logging enabled
+        self.s3bucket = s3.Bucket(self, "Working S3 Bucket",
+            encryption=s3.BucketEncryption.KMS,
+            encryption_key=securityConstruct.encryption_key,
+            block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
+            versioned=True,
+            enforce_ssl=True,
+            # removal_policy=RemovalPolicy.DESTROY,
+            # auto_delete_objects=True,
+            cors=[s3.CorsRule(
+                    allowed_headers=["*"],
+                    allowed_methods=[s3.HttpMethods.PUT, s3.HttpMethods.GET],
+                    allowed_origins=["*"])
+                ],
+            server_access_logs_bucket=self.logs_bucket,
+            server_access_logs_prefix="working-bucket-logs/"
+        )
+        
+        self.transcribe_role = iam.Role(
+            self, "ExscriboTranscribeServiceRole",
+            assumed_by=iam.ServicePrincipal("transcribe.amazonaws.com")
+        )
+        
+        securityConstruct.encryption_key.grant_decrypt(self.transcribe_role)
+        self.s3bucket.grant_read_write(self.transcribe_role,"teams/*")
+        self.s3bucket.grant_read_write(securityConstruct.stepfunction_lambda_service_role,"teams/*")
+        self.s3bucket.grant_read_write(securityConstruct.api_lambda_service_role,"teams/*")
+        
+        # Store bucket names in Parameter Store
+        self.s3_bucket_param = ssm.StringParameter(self, "S3BucketName",
+            parameter_name="/exscribo/storage/bucket-name",
+            string_value=self.s3bucket.bucket_name,
+        )
+        
+        # Store logs bucket name in Parameter Store
+        self.logs_bucket_param = ssm.StringParameter(self, "S3LogsBucketName",
+            parameter_name="/exscribo/storage/logs-bucket-name",
+            string_value=self.logs_bucket.bucket_name,
+        )
+
+        self.s3_bucket_param.grant_read(securityConstruct.api_lambda_service_role)
+        self.s3_bucket_param.grant_read(securityConstruct.stepfunction_lambda_service_role)

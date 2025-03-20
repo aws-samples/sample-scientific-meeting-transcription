@@ -1,0 +1,4 @@
+/* Override Vuetify's responsive sizer class */
+.v-responsive__sizer {
+    display: none !important;
+}

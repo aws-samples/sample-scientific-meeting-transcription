@@ -1,0 +1,42 @@
+{
+	"compilerOptions": {
+		"target": "ES2020",
+		"module": "ES2020",
+		"lib": ["DOM", "DOM.Iterable", "ES2020"],
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"outDir": "./dist",
+		"esModuleInterop": true,
+		"moduleResolution": "node",
+		"allowSyntheticDefaultImports": true,
+		"strict": false,
+		"forceConsistentCasingInFileNames": true,
+		"noImplicitReturns": false,
+		"noFallthroughCasesInSwitch": true,
+		"experimentalDecorators": true,
+		"types": ["vue"],
+		"allowJs": true,
+		"noImplicitAny": false,
+		"baseUrl": ".",
+		"paths": {
+		  "@/*": ["./*"],
+		  "@views/*": ["./src/views/*"],
+		  "@types/*": ["./src/types/*"],
+		  "@assets/*": ["./src/assets/*"],
+		  "@services/*": ["./src/services/*"],
+		  "@utils/*": ["./src/utils/*"],
+		}
+	},
+	"include": [
+		"src/*.ts",
+		"src/**/*.ts",
+		"src/**/*.d.ts",
+		"src/**/*.vue",
+		"src/**/*.svg",
+		"src/**/*.png",
+		"vite-env.d.ts"
+	],
+	"exclude": [
+		"node_modules"
+	]
+}

@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+        <AWSProjectType>Lambda</AWSProjectType>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <PublishReadyToRun>false</PublishReadyToRun>
+        <LangVersion>12</LangVersion>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.1"/>
+        <PackageReference Include="Amazon.Lambda.Core" Version="2.5.0"/>
+        <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4"/>
+        <PackageReference Include="AWSSDK.Bedrock" Version="4.0.0-preview.5"/>
+        <PackageReference Include="AWSSDK.Core" Version="4.0.0-preview.5"/>
+        <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.0-preview.5"/>
+        <PackageReference Include="AWSSDK.S3" Version="4.0.0-preview.5"/>
+        <PackageReference Include="AWSSDK.SecretsManager" Version="4.0.0-preview.5"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0"/>
+        <PackageReference Include="Serilog.AspNetCore.Plus" Version="8.0.0"/>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Common\Common.csproj"/>
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Remove="asset-output\**"/>
+    </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Remove="asset-output\**"/>
+    </ItemGroup>
+    <ItemGroup>
+        <None Remove="asset-output\**"/>
+    </ItemGroup>
+</Project>

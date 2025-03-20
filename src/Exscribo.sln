@@ -1,0 +1,38 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{6463C99E-9B8D-4BAF-A4C2-46F67EA4166F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExscriboAPI", "ExscriboAPI\ExscriboAPI.csproj", "{D6131924-CB4F-49F5-86B0-2E79094904B3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "exscribo.Tests", "test\exscribo.Tests\exscribo.Tests.csproj", "{4C35F1EC-0BD4-45B7-A8BB-868AF6B0073B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StepFunctionLambda", "StepFunctionLambda\StepFunctionLambda.csproj", "{680BB963-FEF0-4DEB-9E4C-E6C4F8CB6C60}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6463C99E-9B8D-4BAF-A4C2-46F67EA4166F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6463C99E-9B8D-4BAF-A4C2-46F67EA4166F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6463C99E-9B8D-4BAF-A4C2-46F67EA4166F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6463C99E-9B8D-4BAF-A4C2-46F67EA4166F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6131924-CB4F-49F5-86B0-2E79094904B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6131924-CB4F-49F5-86B0-2E79094904B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6131924-CB4F-49F5-86B0-2E79094904B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6131924-CB4F-49F5-86B0-2E79094904B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C35F1EC-0BD4-45B7-A8BB-868AF6B0073B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C35F1EC-0BD4-45B7-A8BB-868AF6B0073B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C35F1EC-0BD4-45B7-A8BB-868AF6B0073B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C35F1EC-0BD4-45B7-A8BB-868AF6B0073B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{680BB963-FEF0-4DEB-9E4C-E6C4F8CB6C60}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{680BB963-FEF0-4DEB-9E4C-E6C4F8CB6C60}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{680BB963-FEF0-4DEB-9E4C-E6C4F8CB6C60}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{680BB963-FEF0-4DEB-9E4C-E6C4F8CB6C60}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(RiderSharedRunConfigurations) = postSolution
+		File = TranscribeLambda\TranscribeLambda.run\TranscribeLambda.run.xml
+		File = PromptProcessLambda\TranscribeLambda.run\TranscribeLambda.run.xml
+	EndGlobalSection
+EndGlobal

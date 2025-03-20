@@ -1,0 +1,20 @@
+
+node_modules/
+dist/
+npm-debug.log
+yarn-error.log
+
+# .NET Core build folders
+bin/
+obj/
+asset-output/
+cdk.out/
+
+# Common node modules locations
+/node_modules
+/wwwroot/node_modules
+/asset-output
+.cdk.staging
+cdk.out
+.env
+.sonarqube
