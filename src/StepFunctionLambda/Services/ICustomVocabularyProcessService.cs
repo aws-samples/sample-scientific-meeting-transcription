@@ -6,7 +6,18 @@ using Common.Types.StepFunction;
 
 namespace StepFunctionLambda.Services;
 
+/// <summary>
+/// Interface for the Custom Vocabulary Process service that handles custom vocabulary creation and management.
+/// Provides functionality to create or update custom vocabularies for improved transcription accuracy.
+/// </summary>
 public interface ICustomVocabularyProcessService
 {
-    Task<object> ProcessCustomVocabularyRequest(CustomVocabularyStepMachineType input);
+    /// <summary>
+    /// Processes a custom vocabulary request.
+    /// Creates or updates a custom vocabulary with domain-specific terms,
+    /// submits it to Amazon Transcribe, and monitors the creation process.
+    /// </summary>
+    /// <param name="input">Input parameters containing vocabulary details, phrases, and processing settings</param>
+    /// <returns>Object containing the result of the custom vocabulary processing operation</returns>
+    Task<object> ProcessCustomVocabularyRequest(CustomVocabularyLambdaInputType input);
 }

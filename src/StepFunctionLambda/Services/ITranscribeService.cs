@@ -6,7 +6,18 @@ using Common.Types.StepFunction;
 
 namespace StepFunctionLambda.Services;
 
+/// <summary>
+/// Interface for the Transcribe service that handles audio transcription requests.
+/// Provides functionality to process transcription jobs using Amazon Transcribe.
+/// </summary>
 public interface ITranscribeService
 {
+    /// <summary>
+    /// Processes a transcription request for a meeting audio file.
+    /// Submits the audio file to Amazon Transcribe, monitors job progress,
+    /// and stores the resulting transcription data.
+    /// </summary>
+    /// <param name="input">Input parameters containing meeting ID, S3 location of audio file, and other transcription settings</param>
+    /// <returns>Object containing the result of the transcription process</returns>
     Task<object> ProcessTranscribeRequest(TranscriptionMeetingInputType input);
 }

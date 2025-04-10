@@ -15,13 +15,28 @@ using Microsoft.Extensions.Logging;
 
 namespace Common.AWSServices;
 
+/// <summary>
+/// Static class for interacting with Amazon Bedrock Knowledge Base
+/// Provides methods for ingesting and deleting documents in a knowledge base
+/// </summary>
 public static class BedrockKnowledgeBase
 {
+    /// <summary>
+    /// Ingests a binary document into the Bedrock Knowledge Base
+    /// </summary>
+    /// <param name="amazonBedrockAgent">The Bedrock Agent client</param>
+    /// <param name="documentId">Unique identifier for the document</param>
+    /// <param name="memoryStream">Document content as a memory stream</param>
+    /// <param name="mimeType">MIME type of the document</param>
+    /// <param name="metaData">Metadata key-value pairs for the document</param>
+    /// <param name="logger">Logger for tracking operations</param>
+    /// <returns>Async task</returns>
     public static async Task IngestDocumentKnowledgeBaseObject(IAmazonBedrockAgent amazonBedrockAgent, string? documentId, MemoryStream memoryStream, string mimeType,
         Dictionary<string, string?> metaData, ILogger logger)
     {
         try
         {
+            // Create request to ingest a binary document into the knowledge base
             IngestKnowledgeBaseDocumentsRequest documentsRequest = new IngestKnowledgeBaseDocumentsRequest()
             {
                 DataSourceId = EnvironmentHelper.BEDROCK_KB_DATASOURCE_ID,
@@ -30,6 +45,7 @@ public static class BedrockKnowledgeBase
                 {
                     new()
                     {
+                        // Configure document content with binary data
                         Content = new DocumentContent()
                         {
                             DataSourceType = ContentDataSourceType.CUSTOM,
@@ -51,6 +67,7 @@ public static class BedrockKnowledgeBase
                                 }
                             }
                         },
+                        // Add metadata attributes to the document
                         Metadata = new()
                         {
                             Type = MetadataSourceType.IN_LINE_ATTRIBUTE,
@@ -67,9 +84,13 @@ public static class BedrockKnowledgeBase
                 }
             };
             logger.LogInformation("Bedrock knowledge base document ingestion started {@documentsRequest}", documentsRequest);
+            
+            // Send the ingestion request
             IngestKnowledgeBaseDocumentsResponse ingestResponse = await amazonBedrockAgent.IngestKnowledgeBaseDocumentsAsync(documentsRequest);
+            
             if (ingestResponse.HttpStatusCode == HttpStatusCode.Accepted)
             {
+                // Poll for document status until it's indexed or failed
                 while (true)
                 {
                     var status = await amazonBedrockAgent.GetKnowledgeBaseDocumentsAsync(new GetKnowledgeBaseDocumentsRequest()
@@ -88,18 +109,22 @@ public static class BedrockKnowledgeBase
                             }
                         ]
                     });
+                    
+                    // Check if document is successfully indexed
                     if (status.DocumentDetails[0].Status == DocumentStatus.INDEXED)
                     {
                         logger.LogInformation("Bedrock knowledge base document ingestion completed {@status}", status.DocumentDetails[0]);
                         break;
                     }
 
+                    // Check if document ingestion failed
                     if (status.DocumentDetails[0].Status == DocumentStatus.FAILED)
                     {
                         logger.LogError("Bedrock knowledge base document ingestion failed {@status}", status.DocumentDetails[0]);
                         throw new Exception(status.DocumentDetails[0].StatusReason);
                     }
 
+                    // Wait before checking status again
                     Thread.Sleep(2000);
                 }
             }
@@ -110,11 +135,21 @@ public static class BedrockKnowledgeBase
         }
     }
 
+    /// <summary>
+    /// Ingests a text document into the Bedrock Knowledge Base
+    /// </summary>
+    /// <param name="amazonBedrockAgent">The Bedrock Agent client</param>
+    /// <param name="documentId">Unique identifier for the document</param>
+    /// <param name="content">Text content of the document</param>
+    /// <param name="metaData">Metadata key-value pairs for the document</param>
+    /// <param name="logger">Logger for tracking operations</param>
+    /// <returns>Async task</returns>
     public static async Task IngestTextKnowledgeBaseObject(IAmazonBedrockAgent amazonBedrockAgent, string documentId, string content,
         Dictionary<string, string?> metaData, ILogger logger)
     {
         try
         {
+            // Create request to ingest a text document into the knowledge base
             IngestKnowledgeBaseDocumentsRequest documentsRequest = new IngestKnowledgeBaseDocumentsRequest()
             {
                 DataSourceId = EnvironmentHelper.BEDROCK_KB_DATASOURCE_ID,
@@ -123,6 +158,7 @@ public static class BedrockKnowledgeBase
                 {
                     new()
                     {
+                        // Configure document content with text data
                         Content = new DocumentContent()
                         {
                             DataSourceType = ContentDataSourceType.CUSTOM,
@@ -143,6 +179,7 @@ public static class BedrockKnowledgeBase
                                 SourceType = CustomSourceType.IN_LINE
                             }
                         },
+                        // Add metadata attributes to the document
                         Metadata = new()
                         {
                             Type = MetadataSourceType.IN_LINE_ATTRIBUTE,
@@ -159,9 +196,13 @@ public static class BedrockKnowledgeBase
                 }
             };
             logger.LogInformation("Bedrock knowledge base document ingestion started {@documentsRequest}", documentsRequest);
+            
+            // Send the ingestion request
             IngestKnowledgeBaseDocumentsResponse ingestResponse = await amazonBedrockAgent.IngestKnowledgeBaseDocumentsAsync(documentsRequest);
+            
             if (ingestResponse.HttpStatusCode == HttpStatusCode.Accepted)
             {
+                // Poll for document status until it's indexed or failed
                 while (true)
                 {
                     var status = await amazonBedrockAgent.GetKnowledgeBaseDocumentsAsync(new GetKnowledgeBaseDocumentsRequest()
@@ -180,18 +221,22 @@ public static class BedrockKnowledgeBase
                             }
                         ]
                     });
+                    
+                    // Check if document is successfully indexed
                     if (status.DocumentDetails[0].Status == DocumentStatus.INDEXED)
                     {
                         logger.LogInformation("Bedrock knowledge base document ingestion completed {@status}", status.DocumentDetails[0]);
                         break;
                     }
 
+                    // Check if document ingestion failed
                     if (status.DocumentDetails[0].Status == DocumentStatus.FAILED)
                     {
                         logger.LogError("Bedrock knowledge base document ingestion failed {@status}", status.DocumentDetails[0]);
                         throw new Exception(status.DocumentDetails[0].StatusReason);
                     }
 
+                    // Wait before checking status again
                     Thread.Sleep(2000);
                 }
             }
@@ -202,10 +247,18 @@ public static class BedrockKnowledgeBase
         }
     }
 
+    /// <summary>
+    /// Deletes a document from the Bedrock Knowledge Base
+    /// </summary>
+    /// <param name="amazonBedrockAgent">The Bedrock Agent client</param>
+    /// <param name="documentId">Unique identifier for the document to delete</param>
+    /// <param name="logger">Logger for tracking operations</param>
+    /// <returns>Async task</returns>
     public static async Task DeleteKnowledgeBaseObject(IAmazonBedrockAgent amazonBedrockAgent, string? documentId, ILogger logger)
     {
         try
         {
+            // Create request to delete a document from the knowledge base
             var deleteResponse = await amazonBedrockAgent.DeleteKnowledgeBaseDocumentsAsync(new DeleteKnowledgeBaseDocumentsRequest()
             {
                 DataSourceId = EnvironmentHelper.BEDROCK_KB_DATASOURCE_ID,
@@ -222,8 +275,10 @@ public static class BedrockKnowledgeBase
                     }
                 ]
             });
+            
             if (deleteResponse.HttpStatusCode == HttpStatusCode.Accepted)
             {
+                // Poll for document status until it's not found or failed
                 while (true)
                 {
                     var status = await amazonBedrockAgent.GetKnowledgeBaseDocumentsAsync(new GetKnowledgeBaseDocumentsRequest()
@@ -242,18 +297,22 @@ public static class BedrockKnowledgeBase
                             }
                         ]
                     });
+                    
+                    // Check if document is successfully deleted
                     if (status.DocumentDetails[0].Status == DocumentStatus.NOT_FOUND)
                     {
                         logger.LogInformation("Bedrock knowledge base document deletion completed {@status}", status.DocumentDetails[0]);
                         break;
                     }
 
+                    // Check if document deletion failed
                     if (status.DocumentDetails[0].Status == DocumentStatus.FAILED)
                     {
                         logger.LogError("Bedrock knowledge base document deletion failed {@status}", status.DocumentDetails[0]);
                         throw new Exception(status.DocumentDetails[0].StatusReason);
                     }
 
+                    // Wait before checking status again
                     Thread.Sleep(2000);
                 }
             }

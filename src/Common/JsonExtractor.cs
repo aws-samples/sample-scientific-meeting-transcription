@@ -8,8 +8,17 @@ using System.Text.RegularExpressions;
 
 namespace Common;
 
+/// <summary>
+/// Utility class for extracting JSON from text content using regular expressions
+/// </summary>
 public static class JsonExtractor
 {
+    /// <summary>
+    /// Extracts and deserializes JSON from text to a specified type
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize the JSON to</typeparam>
+    /// <param name="text">The text containing JSON to extract</param>
+    /// <returns>Deserialized object of type T or default if extraction fails</returns>
     public static T? NaiveJsonFromText<T>(string text)
     {
         try
@@ -30,7 +39,11 @@ public static class JsonExtractor
         }
     }
 
-    // Overload that returns JsonDocument if you don't know the type
+    /// <summary>
+    /// Extracts JSON from text and returns as JsonDocument when type is unknown
+    /// </summary>
+    /// <param name="text">The text containing JSON to extract</param>
+    /// <returns>JsonDocument containing the extracted JSON or null if extraction fails</returns>
     public static JsonDocument? NaiveJsonFromText(string text)
     {
         try

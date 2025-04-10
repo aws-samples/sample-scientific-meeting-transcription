@@ -9,17 +9,31 @@ using Microsoft.Extensions.Logging;
 
 namespace Common
 {
+    /// <summary>
+    /// Static utility class for handling API responses and exceptions
+    /// Provides standardized methods for creating API responses and handling errors
+    /// </summary>
     public static class ApiActions
     {
+        /// <summary>
+        /// Handles exceptions in API calls and creates appropriate error responses
+        /// </summary>
+        /// <param name="exception">The exception to handle</param>
+        /// <param name="logger">Logger for tracking errors</param>
+        /// <param name="payloadObject">Optional payload object for additional error context</param>
+        /// <returns>An appropriate IActionResult based on the exception</returns>
         public static IActionResult? HandleApiReturnException(Exception? exception, ILogger logger, object? payloadObject = null)
         {
+            // Log the payload if provided
             if (payloadObject != null)
             {
                 logger.LogError("Payload JSON: {@payloadObject}", payloadObject);
             }
 
+            // Log the full exception details
             logger.LogError("Exception: {@exception}", exception);
 
+            // Check for exception messages at different levels and return appropriate responses
             if (exception?.Message != null)
             {
                 return CreateResponse(HttpStatusCode.UnprocessableEntity, exception?.Message);
@@ -35,23 +49,36 @@ namespace Common
                 return CreateResponse(HttpStatusCode.UnprocessableEntity, exception.InnerException.InnerException.Message);
             }
 
+            // Return the full exception if no specific message is available
             return CreateResponse(HttpStatusCode.UnprocessableEntity, exception);
         }
 
+        /// <summary>
+        /// Creates a standardized API response based on HTTP status code
+        /// </summary>
+        /// <param name="httpCode">The HTTP status code for the response</param>
+        /// <param name="information">Optional information/payload to include in the response</param>
+        /// <returns>An appropriate IActionResult for the status code</returns>
         public static IActionResult? CreateResponse(HttpStatusCode? httpCode, object? information = null)
         {
+            // Map HTTP status codes to appropriate ActionResults
             return httpCode switch
             {
+                // Success responses
                 HttpStatusCode.OK => new OkObjectResult(information),
                 HttpStatusCode.Created => new CreatedResult((string?)null, information),
                 HttpStatusCode.Accepted => new AcceptedResult((string?)null, information),
                 HttpStatusCode.NoContent => new NoContentResult(),
+                
+                // Client error responses
                 HttpStatusCode.BadRequest => new BadRequestObjectResult(information),
                 HttpStatusCode.UnprocessableEntity => new UnprocessableEntityObjectResult(information),
                 HttpStatusCode.NotFound => new NotFoundObjectResult(information),
                 HttpStatusCode.Conflict => new ConflictObjectResult(information),
                 HttpStatusCode.Forbidden => new ForbidResult(),
                 HttpStatusCode.Unauthorized => new UnauthorizedResult(),
+                
+                // Default case
                 _ => null
             };
         }

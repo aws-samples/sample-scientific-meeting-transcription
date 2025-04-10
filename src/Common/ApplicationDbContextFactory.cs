@@ -8,8 +8,16 @@ using Microsoft.EntityFrameworkCore.Design;
 
 namespace Common
 {
+    /// <summary>
+    /// Implements IDesignTimeDbContextFactory to support Entity Framework Core design-time tools like migrations
+    /// </summary>
     public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
     {
+        /// <summary>
+        /// Creates a database context with development connection string for migrations
+        /// </summary>
+        /// <param name="args">Command line arguments passed to the context factory</param>
+        /// <returns>A configured ApplicationDbContext instance</returns>
         public ApplicationDbContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();

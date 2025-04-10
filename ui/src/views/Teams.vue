@@ -48,6 +48,7 @@
       :items="teams"
       :search="search"
       :loading="loading"
+      loading-text="Loading teams..."
       :items-per-page="pageSize"
       :page="currentPage"
       @update:options="handlePageChange"

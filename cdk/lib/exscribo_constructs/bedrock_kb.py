@@ -154,7 +154,7 @@ class BedrockKBConstruct(Construct):
 
         vectorCollection.grant_data_access(kb_role)
         kb_role.add_to_policy(storageConstruct.s3_rw_statement)
-        kb_role.add_to_policy(storageConstruct.s3_list_statement)
+        # kb_role.add_to_policy(storageConstruct.s3_list_statement)
 
         self.knowledge_base = aws_bedrock.CfnKnowledgeBase(
             self,

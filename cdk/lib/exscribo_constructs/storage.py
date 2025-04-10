@@ -8,6 +8,8 @@ from aws_cdk import (
     aws_ssm as ssm,
     aws_iam as iam,
     aws_ec2 as ec2,
+        Stack,
+
 )
 from constructs import Construct
 from cdk_nag import NagSuppressions
@@ -30,12 +32,50 @@ class StorageConstruct(Construct):
             # auto_delete_objects=True,
             versioned=True,
             enforce_ssl=True,
+            
         )
+        self.logs_bucket.add_to_resource_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=["s3:PutObject"],
+                principals=[iam.ServicePrincipal("delivery.logs.amazonaws.com")],
+                resources=[f"{self.logs_bucket.bucket_arn}/*", self.logs_bucket.bucket_arn],
+                conditions={
+                    "StringEquals": {
+                        "aws:SourceAccount": Stack.of(self).account,
+                        "s3:x-amz-acl": "bucket-owner-full-control"
+                    },
+                    "ArnLike": {
+                        "aws:SourceArn": f"arn:aws:logs:{Stack.of(self).region}:{Stack.of(self).account}:*"
+                    }
+                }
+            )
+        )
+        self.logs_bucket.add_to_resource_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=["s3:GetBucketAcl"],
+                principals=[iam.ServicePrincipal("delivery.logs.amazonaws.com")],
+                resources=[f"arn:aws:s3:::{self.logs_bucket.bucket_name}"],
+                conditions={
+                    "StringEquals": {
+                        "aws:SourceAccount": Stack.of(self).account,
+                    },
+                    "ArnLike": {
+                        "aws:SourceArn": f"arn:aws:logs:{Stack.of(self).region}:{Stack.of(self).account}:*"
+                    }
+                }
+            )         
+        )
+
         
         # Create VPC Flow Logs after logs bucket exists
         flow_logs = ec2.FlowLog(
             self, "VPCFlowLogs",
+            flow_log_name="VPCFlowLogs",
             resource_type=ec2.FlowLogResourceType.from_vpc(networkConstruct.vpc),
+            max_aggregation_interval=ec2.FlowLogMaxAggregationInterval.ONE_MINUTE,
+            traffic_type=ec2.FlowLogTrafficType.ALL,
             destination=ec2.FlowLogDestination.to_s3(
                 bucket=self.logs_bucket,
                 key_prefix="vpcflows/"
@@ -79,11 +119,14 @@ class StorageConstruct(Construct):
                     effect=iam.Effect.ALLOW,
                     actions=[
                         "s3:PutObject",
-                        "s3:GetObject"
+                        "s3:DeleteObject",
+                        "s3:GetObject",
+                        "s3:PutObjectACL"
                     ],
                     resources=[
-                        f"arn:aws:s3:::{self.s3bucket.bucket_name}/teams/*",
-                        f"arn:aws:s3:::{self.s3bucket.bucket_name}/chunk-processor/*"
+                        f"arn:aws:s3:::{self.s3bucket.bucket_name}/*",
+                        f"arn:aws:s3:::{self.s3bucket.bucket_name}",
+
                     ]
                 )        
 

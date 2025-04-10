@@ -6,7 +6,18 @@ using Common.Types.StepFunction;
 
 namespace StepFunctionLambda.Services;
 
+/// <summary>
+/// Interface for the Prompt Processing service that handles LLM prompt requests.
+/// Provides functionality to process prompts against language models to generate insights from meeting transcripts.
+/// </summary>
 public interface IPromptProcessService
 {
+    /// <summary>
+    /// Processes a prompt request against a language model.
+    /// Takes meeting transcript data and prompt templates, submits them to an LLM,
+    /// and processes the responses to extract insights.
+    /// </summary>
+    /// <param name="input">Input parameters containing meeting ID, prompt details, and processing settings</param>
+    /// <returns>Object containing the result of the prompt processing operation</returns>
     Task<object> ProcessPromptRequest(PromptProcessLambdaInputType input);
 }

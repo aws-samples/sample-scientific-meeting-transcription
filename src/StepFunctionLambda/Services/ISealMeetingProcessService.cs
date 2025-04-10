@@ -6,7 +6,18 @@ using Common.Types.StepFunction;
 
 namespace StepFunctionLambda.Services;
 
+/// <summary>
+/// Interface for the Seal Meeting Process service that handles meeting finalization.
+/// Provides functionality to mark meetings as complete and finalize all associated data.
+/// </summary>
 public interface ISealMeetingProcessService
 {
-    Task<object> SealMeetingService(SealMeetingStepMachineType input);
+    /// <summary>
+    /// Finalizes a meeting by marking it as sealed/complete.
+    /// Updates meeting status, finalizes all associated data,
+    /// and performs any necessary cleanup operations.
+    /// </summary>
+    /// <param name="input">Input parameters containing meeting ID and sealing settings</param>
+    /// <returns>Object containing the result of the meeting sealing operation</returns>
+    Task<object> SealMeetingService(SealMeetingLambdaInputType input);
 }

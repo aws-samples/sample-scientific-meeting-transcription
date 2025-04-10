@@ -10,12 +10,25 @@ using Amazon.Bedrock.Model;
 
 namespace Common.AWSServices;
 
+/// <summary>
+/// Class for managing Bedrock inference profiles
+/// Provides methods to retrieve and filter available inference profiles
+/// </summary>
 public class InferenceProfiles
 {
+    /// <summary>
+    /// Retrieves a specific inference profile ARN by model name
+    /// </summary>
+    /// <param name="bedrockService">The Bedrock service client</param>
+    /// <param name="model">The model name to search for (e.g., "Claude", "Nova")</param>
+    /// <returns>The matching inference profile summary or null if not found</returns>
     public async Task<InferenceProfileSummary?> GetInferenceProfileArnAsync(IAmazonBedrock bedrockService, string? model)
     {
+        // Get all available inference profiles
         InferenceProfileSummary? inferenceProfileSummary = null;
         List<InferenceProfileSummary>? inferenceProfileSummaries = await GetAllInferenceProfilesAsync(bedrockService);
+        
+        // Find the first profile that contains the specified model name
         if (inferenceProfileSummaries != null)
         {
             inferenceProfileSummary = inferenceProfileSummaries.FirstOrDefault(x => x.InferenceProfileName?.Contains(model) ?? false);
@@ -24,20 +37,31 @@ public class InferenceProfiles
         return inferenceProfileSummary;
     }
 
+    /// <summary>
+    /// Retrieves all available inference profiles with optional filtering
+    /// </summary>
+    /// <param name="bedrockService">The Bedrock service client</param>
+    /// <param name="modelFilter">Optional list of model name filters (defaults to Claude and Nova)</param>
+    /// <returns>List of matching inference profile summaries</returns>
     public async Task<List<InferenceProfileSummary>?> GetAllInferenceProfilesAsync(IAmazonBedrock bedrockService, List<string>? modelFilter = null)
     {
+        // Default to Claude and Nova models if no filter is provided
         if (modelFilter == null)
         {
             modelFilter = ["Claude", "Nova"];
         }
 
+        // Request up to 100 inference profiles from Bedrock
         var availableProfiles = await bedrockService.ListInferenceProfilesAsync(new ListInferenceProfilesRequest()
         {
             MaxResults = 100
         });
+        
+        // Filter profiles by the specified model names
         var models = availableProfiles?
             .InferenceProfileSummaries?
             .FindAll(x => modelFilter.Any(filter => x?.InferenceProfileName?.Contains(filter) == true));
+            
         return models;
     }
 }

@@ -35,12 +35,25 @@ using Serilog.Events;
 
 namespace ExscriboAPI
 {
+    /// <summary>
+    /// Startup class for configuring the application services and request pipeline
+    /// Uses primary constructor pattern to inject IConfiguration
+    /// </summary>
     public class Startup(IConfiguration configuration)
     {
+        /// <summary>
+        /// Application configuration properties
+        /// </summary>
         public IConfiguration Configuration { get; } = configuration;
 
+        /// <summary>
+        /// Configures the application services
+        /// This method gets called by the runtime to add services to the container
+        /// </summary>
+        /// <param name="services">The service collection to configure</param>
         public void ConfigureServices(IServiceCollection services)
         {
+            // Configure Serilog for structured logging with appropriate log levels
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                 .Enrich.FromLogContext()
@@ -51,6 +64,7 @@ namespace ExscriboAPI
                 .WriteTo.Console()
                 .CreateBootstrapLogger();
 
+            // Configure AutoMapper with all required mapping profiles
             MapperConfiguration mapperConfig = new MapperConfiguration(mc =>
             {
                 mc.AddProfile(new PromptMappingProfile());
@@ -66,12 +80,17 @@ namespace ExscriboAPI
 
             IMapper mapper = mapperConfig.CreateMapper();
 
+            // Register AutoMapper as a singleton
             services.AddSingleton(mapper);
+            
+            // Configure JSON serialization options for HTTP responses
             services.ConfigureHttpJsonOptions(options =>
             {
                 options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
             });
+            
+            // Add controllers with JSON serialization options
             services.AddControllers()
                 .AddJsonOptions(options =>
                 {
@@ -79,7 +98,7 @@ namespace ExscriboAPI
                     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 });
 
-            // Add Swagger services
+            // Add Swagger services for API documentation
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(c =>
             {
@@ -91,7 +110,10 @@ namespace ExscriboAPI
                 });
             });
 
-            AWSConfigsS3.UseSignatureVersion4 = true;
+            // Configure AWS services
+            AWSConfigsS3.UseSignatureVersion4 = true; // Use Signature Version 4 for S3 authentication
+            
+            // Register all required AWS service clients
             services.AddAWSService<IAmazonBedrockAgentRuntime>();
             services.AddAWSService<IAmazonStepFunctions>();
             services.AddAWSService<IAmazonBedrock>();
@@ -103,10 +125,14 @@ namespace ExscriboAPI
             services.AddAWSService<IAmazonBedrockRuntime>();
             services.AddAWSService<AmazonBedrockRuntimeClient>();
             services.AddAWSService<IAmazonBedrockAgent>();
+            
+            // Add database context with transient lifetime
             services.AddDbContext<ApplicationDbContext>(ServiceLifetime.Transient);
+            
+            // Register AWS X-Ray for tracing all AWS service calls
             AWSSDKHandler.RegisterXRayForAllServices();
 
-            // Add the mapping services
+            // Register mapping services with scoped lifetime
             services.AddScoped<MeetingMapService>();
             services.AddScoped<PromptSetMapService>();
             services.AddScoped<PromptMapService>();
@@ -116,12 +142,15 @@ namespace ExscriboAPI
             services.AddScoped<MeetingDocumentMapService>();
             services.AddScoped<CustomVocabularyMapService>();
             services.AddScoped<VocabularyPhraseMapService>();
+            
+            // Configure logging to use Serilog
             services.AddLogging(logging =>
             {
                 logging.ClearProviders();
                 logging.AddSerilog(dispose: true, logger: Log.Logger);
             });
 
+            // Register repositories with scoped lifetime
             services.AddScoped<IMeetingDocumentsRepository, MeetingDocumentsRepository>();
             services.AddScoped<IMeetingRepository, MeetingRepository>();
             services.AddScoped<ITeamRepository, TeamRepository>();
@@ -131,6 +160,8 @@ namespace ExscriboAPI
             services.AddScoped<IPromptRepository, PromptRepository>();
             services.AddScoped<ICustomVocabularyRepository, CustomVocabularyRepository>();
             services.AddScoped<IVocabularyPhraseRepository, VocabularyPhraseRepository>();
+            
+            // Configure CORS to allow all origins, methods, and headers
             services.AddCors(option =>
             {
                 option.AddPolicy("all", builder =>
@@ -141,14 +172,20 @@ namespace ExscriboAPI
                         .AllowCredentials();
                 });
             });
+            
+            // Add default AWS options from configuration
             services.AddDefaultAWSOptions(Configuration.GetAWSOptions());
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline
+        /// <summary>
+        /// Configures the HTTP request pipeline
+        /// This method gets called by the runtime to configure the HTTP request pipeline
+        /// </summary>
+        /// <param name="app">The application builder</param>
+        /// <param name="env">The web hosting environment</param>
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            
-            //apply all migration if any are available
+            // Apply database migrations if any are available
             using (var scope = app.ApplicationServices.CreateScope())
             {
                 var logger = scope.ServiceProvider.GetRequiredService<ILogger<ApplicationDbContext>>();
@@ -156,10 +193,10 @@ namespace ExscriboAPI
                 try
                 {
                     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                    // Optionally check for pending migrations first
+                    // Check for pending migrations before applying them
                     if (dbContext.Database.GetPendingMigrations().Any())
                     {
-                        logger.LogInformation("Applying migrations...");;
+                        logger.LogInformation("Applying migrations...");
                         dbContext.Database.Migrate();
                     }
                 }
@@ -170,12 +207,15 @@ namespace ExscriboAPI
                 }
             }
 
+            // Enable AWS X-Ray for request tracing
             app.UseXRay("DescribeAPI");
+            
+            // Configure development-specific middleware
             if (env.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
-                app.UseSwaggerUI(options => // UseSwaggerUI is called only in Development.
+                app.UseSwaggerUI(options => 
                 {
                     options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
                     options.RoutePrefix = string.Empty;
@@ -183,9 +223,12 @@ namespace ExscriboAPI
                 app.UseDeveloperExceptionPage();
             }
 
+            // Configure standard middleware pipeline
             app.UseHttpsRedirection();
             app.UseRouting();
             app.UseAuthorization();
+            
+            // Configure CORS middleware
             app.UseCors(options =>
             {
                 options.SetIsOriginAllowed(s => true)
@@ -193,6 +236,8 @@ namespace ExscriboAPI
                     .AllowAnyHeader()
                     .AllowCredentials();
             });
+            
+            // Map controller endpoints
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
         }
     }

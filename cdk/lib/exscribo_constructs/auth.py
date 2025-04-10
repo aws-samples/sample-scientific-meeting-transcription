@@ -7,6 +7,7 @@ from aws_cdk import (
     Duration,
     Stack,
     aws_cognito as cognito,
+    aws_logs as logs,
     aws_ssm as ssm,
     RemovalPolicy,
     aws_iam as iam,
@@ -18,7 +19,13 @@ from constructs import Construct
 class AuthConstruct(Construct):
     def __init__(self, scope: Construct, id: str):
         super().__init__(scope, id)
-        
+
+        log_group = logs.LogGroup(self, "CognitoLogGroup",
+            log_group_name="/aws/cognito/exscribo-user-pool",
+            retention=logs.RetentionDays.ONE_WEEK,  # Adjust retention period as needed
+            removal_policy=RemovalPolicy.DESTROY
+        )
+                
         # Create Cognito User Pool with enhanced security settings
         self.user_pool = cognito.UserPool(self, "ExscriboUserPool",
             user_pool_name="exscribo-user-pool",
@@ -68,6 +75,27 @@ class AuthConstruct(Construct):
                 callback_urls=["http://localhost:3000"]
             )
         )      
+        log_group_arn_raw = f"arn:aws:logs:{Stack.of(self).region}:{Stack.of(self).account}:log-group:{log_group.log_group_name}"
+        # Add logging configuration to the user pool
+        cfn_log_config = cognito.CfnLogDeliveryConfiguration(self, "CognitoLogging",
+            user_pool_id=self.user_pool.user_pool_id,
+            log_configurations=[
+                cognito.CfnLogDeliveryConfiguration.LogConfigurationProperty(
+                    cloud_watch_logs_configuration=cognito.CfnLogDeliveryConfiguration.CloudWatchLogsConfigurationProperty(
+                        log_group_arn=log_group_arn_raw
+                    ),
+                    event_source="userAuthEvents",  # Logs authentication events
+                    log_level="INFO"  # Can be INFO or ERROR
+                ),
+                cognito.CfnLogDeliveryConfiguration.LogConfigurationProperty(
+                    cloud_watch_logs_configuration=cognito.CfnLogDeliveryConfiguration.CloudWatchLogsConfigurationProperty(
+                        log_group_arn=log_group_arn_raw
+                    ),
+                    event_source="userNotification",
+                    log_level="INFO"
+                )
+            ]
+        )
 
         # Create an Identity Pool
         self.identity_pool = cognito.CfnIdentityPool(self, "ExscriboIdentityPool",

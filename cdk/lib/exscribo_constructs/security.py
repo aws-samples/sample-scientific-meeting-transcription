@@ -26,6 +26,31 @@ class SecurityConstruct(Construct):
             enable_key_rotation=True,
             removal_policy=RemovalPolicy.DESTROY
         )
+        
+        #this is required for the VPC flow logs to write to the S3 KMS Encrypted bucket
+        self.encryption_key.add_to_resource_policy(
+            iam.PolicyStatement(
+                sid="S3 VPC Flow Logs KMS Access",
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "kms:Encrypt",
+                    "kms:Decrypt",
+                    "kms:ReEncrypt*",
+                    "kms:GenerateDataKey*",
+                    "kms:DescribeKey"
+                ],
+                principals=[iam.ServicePrincipal("delivery.logs.amazonaws.com")],
+                resources=["*"],
+                conditions={
+                    "StringEquals": {
+                        "aws:SourceAccount": [Stack.of(self).account],
+                    },
+                    "ArnLike": {
+                        "aws:SourceArn": [f"arn:aws:logs:{Stack.of(self).region}:{Stack.of(self).account}:*"]
+                    }
+                }
+            )         
+        )
 
         # Create Lambda role
         self.api_lambda_service_role = iam.Role(
@@ -146,7 +171,9 @@ class SecurityConstruct(Construct):
         
         # Add KMS permissions to Lambda role
         self.encryption_key.grant_decrypt(self.api_lambda_service_role)
+        self.encryption_key.grant(self.api_lambda_service_role, "kms:GenerateDataKey")
         self.encryption_key.grant_decrypt(self.stepfunction_lambda_service_role)
+        self.encryption_key.grant(self.stepfunction_lambda_service_role, "kms:GenerateDataKey")
         
         self.workflow_logs = logs.LogGroup(self, "ExscriboStepfunctionFlowLogs",
             log_group_name="/aws/stepfunction/exscribo_stepfunctions_logs",                         

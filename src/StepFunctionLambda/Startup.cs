@@ -30,17 +30,36 @@ using StepFunctionLambda.Services;
 
 namespace StepFunctionLambda
 {
+    /// <summary>
+    /// Startup class that configures services for the Lambda function.
+    /// Handles dependency injection setup, logging configuration, and AWS service registration.
+    /// </summary>
     public class Startup
     {
+        /// <summary>
+        /// Configuration instance that provides access to application settings
+        /// </summary>
         public IConfiguration Configuration { get; }
 
+        /// <summary>
+        /// Constructor that initializes the Startup class with configuration
+        /// </summary>
+        /// <param name="configuration">Application configuration from environment variables and other sources</param>
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
 
+        /// <summary>
+        /// Configures services for dependency injection.
+        /// Sets up logging, JSON serialization options, AutoMapper profiles, database context,
+        /// AWS service clients, and application services.
+        /// </summary>
+        /// <param name="services">Service collection to configure</param>
         public void ConfigureServices(IServiceCollection services)
         {
+            // Configure Serilog for structured logging
+            // Sets up console logging with appropriate log levels for different namespaces
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                 .Enrich.FromLogContext()
@@ -51,12 +70,17 @@ namespace StepFunctionLambda
                 .WriteTo.Console()
                 .CreateBootstrapLogger();
 
+            // Configure JSON serialization options for HTTP requests/responses
+            // Enables enum string conversion, reference cycle handling, and case insensitivity
             services.ConfigureHttpJsonOptions(options =>
             {
                 options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                 options.SerializerOptions.PropertyNameCaseInsensitive = true;
             });
+            
+            // Configure AutoMapper for object-to-object mapping
+            // Registers all mapping profiles for different entity types
             MapperConfiguration mapperConfig = new MapperConfiguration(mc =>
             {
                 mc.AddProfile(new PromptMappingProfile());
@@ -69,18 +93,24 @@ namespace StepFunctionLambda
                 mc.AddProfile(new VocabularyPhraseMappingProfile());
             });
 
+            // Create and register mapper instance
             IMapper mapper = mapperConfig.CreateMapper();
             services.AddSingleton(mapper);
+            
+            // Register database context with transient lifetime
             services.AddDbContext<ApplicationDbContext>(ServiceLifetime.Transient);
+            
+            // Register AWS X-Ray for tracing all AWS SDK calls
             AWSSDKHandler.RegisterXRayForAllServices();
-            // Register services
-
+            
+            // Configure logging to use Serilog
             services.AddLogging(logging =>
             {
                 logging.ClearProviders();
                 logging.AddSerilog(dispose: true, logger: Log.Logger);
             });
-            // Add AWS service clients if needed
+            
+            // Register AWS service clients for dependency injection
             services.AddAWSService<IAmazonTranscribeService>();
             services.AddAWSService<IAmazonBedrockRuntime>();
             services.AddAWSService<AmazonBedrockRuntimeClient>();
@@ -90,6 +120,7 @@ namespace StepFunctionLambda
             services.AddAWSService<IAmazonBedrockAgent>();
             services.AddAWSService<IAmazonSimpleSystemsManagement>();
 
+            // Register mapping services with scoped lifetime
             services.AddScoped<MeetingMapService>();
             services.AddScoped<PromptSetMapService>();
             services.AddScoped<PromptMapService>();
@@ -99,13 +130,14 @@ namespace StepFunctionLambda
             services.AddScoped<CustomVocabularyMapService>();
             services.AddScoped<VocabularyPhraseMapService>();
 
+            // Register business logic services with transient lifetime
             services.AddTransient<ITranscribeService, TranscribeService>();
             services.AddTransient<IPromptProcessService, PromptProcessService>();
             services.AddTransient<ICustomModelTrainingService, CustomModelTrainingTrainingService>();
             services.AddTransient<ICustomVocabularyProcessService, CustomVocabularyProcessService>();
             services.AddTransient<ISealMeetingProcessService, SealMeetingProcessService>();
 
-            // Configure AWS options if needed
+            // Configure default AWS options from configuration
             services.AddDefaultAWSOptions(Configuration.GetAWSOptions());
         }
     }

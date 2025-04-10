@@ -22,17 +22,37 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Common;
 
+/// <summary>
+/// Main database context for the Exscribo application
+/// Provides access to all database entities and manages database connections
+/// </summary>
 public sealed class ApplicationDbContext : DbContext
 {
+    /// <summary>
+    /// Cache for AWS Secrets Manager to retrieve database connection strings
+    /// </summary>
     private readonly SecretsManagerCache _secretsCache = new();
+    
+    /// <summary>
+    /// Database context options for configuration
+    /// </summary>
     private readonly DbContextOptions<ApplicationDbContext>? _options;
 
+    /// <summary>
+    /// Asynchronously saves all changes made in this context to the database
+    /// Updates timestamps and other auto-generated fields before saving
+    /// </summary>
+    /// <param name="cancellationToken">A token to observe while waiting for the task to complete</param>
+    /// <returns>The number of state entries written to the database</returns>
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         GenerateOnUpdate();
         return base.SaveChangesAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Default constructor that creates a new instance with default configuration
+    /// </summary>
     public ApplicationDbContext()
     {
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
@@ -40,18 +60,30 @@ public sealed class ApplicationDbContext : DbContext
         _options = optionsBuilder.Options;
     }
 
+    /// <summary>
+    /// Constructor that accepts pre-configured options for the database context
+    /// </summary>
+    /// <param name="options">The options to be used by this context</param>
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
         _options = options;
     }
 
-
+    /// <summary>
+    /// Saves all changes made in this context to the database
+    /// Updates timestamps and other auto-generated fields before saving
+    /// </summary>
+    /// <returns>The number of state entries written to the database</returns>
     public override int SaveChanges()
     {
         GenerateOnUpdate();
         return base.SaveChanges();
     }
 
+    /// <summary>
+    /// Updates timestamps and other auto-generated fields for entities being tracked by the context
+    /// Called automatically before saving changes to the database
+    /// </summary>
     public void GenerateOnUpdate()
     {
         var now = DateTime.UtcNow;
@@ -75,8 +107,10 @@ public sealed class ApplicationDbContext : DbContext
         }
     }
 
-    // Keep your existing constructor
-
+    /// <summary>
+    /// Retrieves the database connection string from AWS Secrets Manager
+    /// </summary>
+    /// <returns>The connection string for the database or null if retrieval fails</returns>
     private string? GetConnectionStringAsync()
     {
         try
@@ -97,6 +131,11 @@ public sealed class ApplicationDbContext : DbContext
         }
     }
 
+    /// <summary>
+    /// Configures the database context options if they haven't been configured already
+    /// Sets up connection string, retry policies, and AWS X-Ray tracing
+    /// </summary>
+    /// <param name="optionsBuilder">Builder for configuring context options</param>
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured)
@@ -123,11 +162,21 @@ public sealed class ApplicationDbContext : DbContext
         }
     }
 
+    /// <summary>
+    /// Configures conventions for model properties
+    /// Sets up automatic UTC conversion for DateTime properties
+    /// </summary>
+    /// <param name="configurationBuilder">Builder for configuring model conventions</param>
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder.Properties<DateTime>().HaveConversion(typeof(DateTimeToDateTimeUtc));
     }
 
+    /// <summary>
+    /// Configures the database model and entity relationships
+    /// Sets up table mappings, keys, and property configurations
+    /// </summary>
+    /// <param name="modelBuilder">Builder for creating the database model</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -361,13 +410,48 @@ public sealed class ApplicationDbContext : DbContext
         });
     }
 
+    /// <summary>
+    /// Custom models for transcription and language processing
+    /// </summary>
     public DbSet<CustomModelDatabaseType> CustomModels { get; set; } = null!;
+    
+    /// <summary>
+    /// Teams that organize users and meetings
+    /// </summary>
     public DbSet<TeamDatabaseType> Teams { get; set; } = null!;
+    
+    /// <summary>
+    /// Documents associated with meetings (transcripts, notes, etc.)
+    /// </summary>
     public DbSet<MeetingDocumentDatabaseType> MeetingDocuments { get; set; } = null!;
+    
+    /// <summary>
+    /// Meeting records with metadata and relationships
+    /// </summary>
     public DbSet<MeetingDatabaseType> Meetings { get; set; } = null!;
+    
+    /// <summary>
+    /// Sets of prompts grouped for specific use cases
+    /// </summary>
     public DbSet<PromptSetDatabaseType> PromptSets { get; set; } = null!;
+    
+    /// <summary>
+    /// Individual prompts used for generating responses
+    /// </summary>
     public DbSet<PromptDatabaseType> Prompts { get; set; } = null!;
+    
+    /// <summary>
+    /// Custom vocabularies for improved transcription accuracy
+    /// </summary>
     public DbSet<CustomVocabularyDatabaseType> CustomVocabularies { get; set; } = null!;
+    
+    /// <summary>
+    /// Phrases within custom vocabularies
+    /// </summary>
     public DbSet<VocabularyPhraseDatabaseType> VocabularyPhrases { get; set; } = null!;
+    
+    /// <summary>
+    /// Responses generated from prompts for specific meetings
+    /// </summary>
     public DbSet<MeetingPromptResponseDatabaseType> MeetingPromptResponses { get; set; } = null!;
 }

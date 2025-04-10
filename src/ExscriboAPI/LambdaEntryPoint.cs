@@ -11,8 +11,16 @@ using Microsoft.Extensions.Hosting;
 
 namespace ExscriboAPI
 {
+    /// <summary>
+    /// Lambda entry point for the application when running in AWS Lambda environment
+    /// This class handles the translation between API Gateway requests and the ASP.NET Core framework
+    /// </summary>
     public class LambdaEntryPoint : APIGatewayProxyFunction
     {
+        /// <summary>
+        /// Configures the web host builder with the application's Startup class
+        /// </summary>
+        /// <param name="builder">The web host builder to configure</param>
         protected override void Init(IWebHostBuilder builder)
         {
             builder.UseStartup<Startup>();

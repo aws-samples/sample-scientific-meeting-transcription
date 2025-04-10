@@ -23,6 +23,10 @@ using SearchType = Amazon.BedrockAgentRuntime.SearchType;
 
 namespace ExscriboAPI.Controllers
 {
+    /// <summary>
+    /// Controller for handling chatbot interactions using Amazon Bedrock
+    /// Provides endpoints for querying the chatbot with team-specific knowledge bases
+    /// </summary>
     [Produces("application/json")]
     [Route("/teams")]
     public class ChatBotController(IAmazonBedrockAgentRuntime bedrockAgentRuntimeClient, ILoggerFactory logger) : Controller
@@ -31,8 +35,20 @@ namespace ExscriboAPI.Controllers
         private readonly string? _bedrockKbId = EnvironmentHelper.BEDROCK_KB_ID;
         private readonly ILogger<ChatBotController> _logger = logger.CreateLogger<ChatBotController>() ?? throw new ArgumentNullException(nameof(logger));
 
+        /// <summary>
+        /// Processes a chatbot question and returns a generated response using Amazon Bedrock
+        /// </summary>
+        /// <param name="teamsId">The ID of the team whose knowledge base should be queried</param>
+        /// <param name="chatbotRequest">The request containing the question and optional meeting ID</param>
+        /// <returns>A response containing the generated answer or an error message</returns>
+        /// <remarks>
+        /// This endpoint filters the knowledge base by team ID and optionally by meeting ID.
+        /// It uses Amazon Bedrock's retrieve and generate capability to provide contextual answers.
+        /// </remarks>
         [Route("{teamsId:Guid}/chatbot")]
         [HttpPut]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ChatBotQuestion([FromRoute] Guid teamsId, [FromBody] ChatBotRequestType? chatbotRequest)
         {
             if (!ModelState.IsValid)
@@ -40,9 +56,11 @@ namespace ExscriboAPI.Controllers
                 return BadRequest(ModelState);
             }
             
+            // Configure the retrieval filter based on team ID and optional meeting ID
             RetrievalFilter retrievalFilter = new RetrievalFilter();
             if (chatbotRequest?.MeetingId != null)
             {
+                // Filter by both team ID and meeting ID
                 retrievalFilter.AndAll = new()
                 {
                     new()
@@ -65,6 +83,7 @@ namespace ExscriboAPI.Controllers
             }
             else
             {
+                // Filter by team ID only
                 retrievalFilter.Equals = new FilterAttribute
                 {
                     Key = "TeamId",
@@ -72,12 +91,15 @@ namespace ExscriboAPI.Controllers
                 };
             }
 
+            // Validate the question
             if (chatbotRequest?.Question == null) return BadRequest("Question is null");
             if (chatbotRequest.Question?.Length == 0) return BadRequest("Question is empty");
             if (chatbotRequest.Question?.Length > 1000) return BadRequest("Question is too long");
+            
             RetrieveAndGenerateResponse? response;
             try
             {
+                // Create the retrieve and generate request
                 var request = new RetrieveAndGenerateRequest
                 {
                     Input = new RetrieveAndGenerateInput
@@ -103,10 +125,12 @@ namespace ExscriboAPI.Controllers
                 };
                 _logger.LogInformation("Query request: {@request}", request);
 
+                // Send the request to Bedrock
                 response = await _bedrockAgentRuntimeClient.RetrieveAndGenerateAsync(request);
             }
             catch (AmazonBedrockAgentRuntimeException ex)
             {
+                _logger.LogError(ex, "Bedrock Error: {Message}", ex.Message);
                 return new BadRequestObjectResult(new { error = $"Bedrock Error: {ex.Message}" });
             }
             catch (Exception ex)
@@ -115,6 +139,7 @@ namespace ExscriboAPI.Controllers
                 return new BadRequestObjectResult(new { error = $"Exception Error: {ex.Message}" });
             }
 
+            // Log the response and return the result
             _logger.LogInformation("KB Response Code:  {@Output}", JsonSerializer.Serialize(response.HttpStatusCode));
             _logger.LogInformation("KB Response: {@Output}", JsonSerializer.Serialize(response.Output));
             return new OkObjectResult(new { result = response.Output.Text });

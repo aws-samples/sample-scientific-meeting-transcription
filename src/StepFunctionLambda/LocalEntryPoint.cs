@@ -10,13 +10,27 @@ namespace StepFunctionLambda
 {
     /// <summary>
     /// The Main function can be used to run the ASP.NET Core application locally using the Kestrel webserver.
+    /// This class provides local development and testing capabilities for the Lambda function.
     /// </summary>
     public class LocalEntryPoint
     {
+        /// <summary>
+        /// Entry point for local execution of the application.
+        /// Currently empty as this is primarily used for AWS Lambda deployment.
+        /// </summary>
+        /// <param name="args">Command line arguments</param>
         public static void Main(string[] args)
         {
+            // This method is intentionally left empty as the primary execution path
+            // is through AWS Lambda rather than local execution
         }
 
+        /// <summary>
+        /// Creates and configures a host builder for local execution.
+        /// Sets up the web host with the Startup class for service configuration.
+        /// </summary>
+        /// <param name="args">Command line arguments</param>
+        /// <returns>Configured IHostBuilder instance</returns>
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });

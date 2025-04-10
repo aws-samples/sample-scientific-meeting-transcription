@@ -7,16 +7,25 @@ using StepFunctionLambda.Services;
 namespace ExscriboAPI
 {
     /// <summary>
-    /// The Main function can be used to run the ASP.NET Core application locally using the Kestrel webserver.
+    /// Entry point for local development that runs the ASP.NET Core application using the Kestrel webserver
     /// </summary>
     public class LocalEntryPoint
     {
+        /// <summary>
+        /// Main entry point for the application when running locally
+        /// Initializes and executes the Lambda function handler for local testing
+        /// </summary>
+        /// <param name="args">Command line arguments</param>
         public static void Main(string[] args)
         {
-            LambdaEntryPoint test = new LambdaEntryPoint();
-            var result = test.FunctionHandlerAsync(null, null).Result;
+            CreateHostBuilder(args).Build().Run();
         }
 
+        /// <summary>
+        /// Creates and configures the host builder with default settings and the application's Startup class
+        /// </summary>
+        /// <param name="args">Command line arguments</param>
+        /// <returns>A configured IHostBuilder instance</returns>
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });

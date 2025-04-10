@@ -1,0 +1,672 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:presentation xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <p:sldMasterIdLst>
+    <p:sldMasterId id="2147483648" r:id="rId1"/>
+  </p:sldMasterIdLst>
+  <p:sldIdLst>
+    <p:sldId id="256" r:id="rId2"/>
+    <p:sldId id="257" r:id="rId3"/>
+    <p:sldId id="258" r:id="rId4"/>
+    <p:sldId id="259" r:id="rId5"/>
+    <p:sldId id="260" r:id="rId6"/>
+  </p:sldIdLst>
+  <p:sldSz cx="9144000" cy="5143500"/>
+  <p:notesSz cx="6858000" cy="9144000"/>
+  
+  <!-- Slide 1: Title Slide -->
+  <p:sld>
+    <p:cSld>
+      <p:spTree>
+        <p:nvGrpSpPr>
+          <p:cNvPr id="1" name=""/>
+          <p:cNvGrpSpPr/>
+          <p:nvPr/>
+        </p:nvGrpSpPr>
+        <p:grpSpPr>
+          <a:xfrm>
+            <a:off x="0" y="0"/>
+            <a:ext cx="0" cy="0"/>
+            <a:chOff x="0" y="0"/>
+            <a:chExt cx="0" cy="0"/>
+          </a:xfrm>
+        </p:grpSpPr>
+        
+        <!-- Title -->
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="2" name="Title"/>
+            <p:cNvSpPr>
+              <a:spLocks noGrp="1"/>
+            </p:cNvSpPr>
+            <p:nvPr>
+              <p:ph type="ctrTitle"/>
+            </p:nvPr>
+          </p:nvSpPr>
+          <p:spPr/>
+          <p:txBody>
+            <a:bodyPr/>
+            <a:lstStyle/>
+            <a:p>
+              <a:r>
+                <a:rPr lang="en-US" b="1" sz="4400"/>
+                <a:t>Exscribo Project Structure</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        
+        <!-- Subtitle -->
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="3" name="Subtitle"/>
+            <p:cNvSpPr>
+              <a:spLocks noGrp="1"/>
+            </p:cNvSpPr>
+            <p:nvPr>
+              <p:ph type="subTitle" idx="1"/>
+            </p:nvPr>
+          </p:nvSpPr>
+          <p:spPr/>
+          <p:txBody>
+            <a:bodyPr/>
+            <a:lstStyle/>
+            <a:p>
+              <a:r>
+                <a:rPr lang="en-US" sz="3200"/>
+                <a:t>Overview of the src Directory</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+      </p:spTree>
+    </p:cSld>
+  </p:sld>
+  
+  <!-- Slide 2: Project Overview -->
+  <p:sld>
+    <p:cSld>
+      <p:spTree>
+        <p:nvGrpSpPr>
+          <p:cNvPr id="1" name=""/>
+          <p:cNvGrpSpPr/>
+          <p:nvPr/>
+        </p:nvGrpSpPr>
+        <p:grpSpPr>
+          <a:xfrm>
+            <a:off x="0" y="0"/>
+            <a:ext cx="0" cy="0"/>
+            <a:chOff x="0" y="0"/>
+            <a:chExt cx="0" cy="0"/>
+          </a:xfrm>
+        </p:grpSpPr>
+        
+        <!-- Title -->
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="2" name="Title"/>
+            <p:cNvSpPr>
+              <a:spLocks noGrp="1"/>
+            </p:cNvSpPr>
+            <p:nvPr>
+              <p:ph type="title"/>
+            </p:nvPr>
+          </p:nvSpPr>
+          <p:spPr/>
+          <p:txBody>
+            <a:bodyPr/>
+            <a:lstStyle/>
+            <a:p>
+              <a:r>
+                <a:rPr lang="en-US" b="1" sz="3600"/>
+                <a:t>Project Overview</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        
+        <!-- Content -->
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="3" name="Content"/>
+            <p:cNvSpPr>
+              <a:spLocks noGrp="1"/>
+            </p:cNvSpPr>
+            <p:nvPr>
+              <p:ph type="body" idx="1"/>
+            </p:nvPr>
+          </p:nvSpPr>
+          <p:spPr/>
+          <p:txBody>
+            <a:bodyPr/>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr lvl="0"/>
+              <a:r>
+                <a:rPr lang="en-US" b="1" sz="2800"/>
+                <a:t>Main Components:</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Common - Shared libraries and utilities</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>ExscriboAPI - Web API service</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>StepFunctionLambda - AWS Lambda functions</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>test - Testing framework and unit tests</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="0"/>
+              <a:r>
+                <a:rPr lang="en-US" b="1" sz="2800"/>
+                <a:t>Technology Stack:</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>.NET 8.0 with C#</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>AWS Services (Lambda, S3, Step Functions, etc.)</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Entity Framework with PostgreSQL</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+      </p:spTree>
+    </p:cSld>
+  </p:sld>
+  
+  <!-- Slide 3: Common Library -->
+  <p:sld>
+    <p:cSld>
+      <p:spTree>
+        <p:nvGrpSpPr>
+          <p:cNvPr id="1" name=""/>
+          <p:cNvGrpSpPr/>
+          <p:nvPr/>
+        </p:nvGrpSpPr>
+        <p:grpSpPr>
+          <a:xfrm>
+            <a:off x="0" y="0"/>
+            <a:ext cx="0" cy="0"/>
+            <a:chOff x="0" y="0"/>
+            <a:chExt cx="0" cy="0"/>
+          </a:xfrm>
+        </p:grpSpPr>
+        
+        <!-- Title -->
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="2" name="Title"/>
+            <p:cNvSpPr>
+              <a:spLocks noGrp="1"/>
+            </p:cNvSpPr>
+            <p:nvPr>
+              <p:ph type="title"/>
+            </p:nvPr>
+          </p:nvSpPr>
+          <p:spPr/>
+          <p:txBody>
+            <a:bodyPr/>
+            <a:lstStyle/>
+            <a:p>
+              <a:r>
+                <a:rPr lang="en-US" b="1" sz="3600"/>
+                <a:t>Common Library</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        
+        <!-- Content -->
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="3" name="Content"/>
+            <p:cNvSpPr>
+              <a:spLocks noGrp="1"/>
+            </p:cNvSpPr>
+            <p:nvPr>
+              <p:ph type="body" idx="1"/>
+            </p:nvPr>
+          </p:nvSpPr>
+          <p:spPr/>
+          <p:txBody>
+            <a:bodyPr/>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr lvl="0"/>
+              <a:r>
+                <a:rPr lang="en-US" b="1" sz="2800"/>
+                <a:t>Key Components:</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>AWSServices - AWS integration services</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>DAO - Data Access Objects for database operations</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Migrations - Database migration scripts</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Types - Shared data models and types</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Utilities - Helper functions and utilities</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="0"/>
+              <a:r>
+                <a:rPr lang="en-US" b="1" sz="2800"/>
+                <a:t>Purpose:</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Provides shared functionality across the application</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Centralizes data models and business logic</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Manages database connections and operations</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+      </p:spTree>
+    </p:cSld>
+  </p:sld>
+  
+  <!-- Slide 4: ExscriboAPI and StepFunctionLambda -->
+  <p:sld>
+    <p:cSld>
+      <p:spTree>
+        <p:nvGrpSpPr>
+          <p:cNvPr id="1" name=""/>
+          <p:cNvGrpSpPr/>
+          <p:nvPr/>
+        </p:nvGrpSpPr>
+        <p:grpSpPr>
+          <a:xfrm>
+            <a:off x="0" y="0"/>
+            <a:ext cx="0" cy="0"/>
+            <a:chOff x="0" y="0"/>
+            <a:chExt cx="0" cy="0"/>
+          </a:xfrm>
+        </p:grpSpPr>
+        
+        <!-- Title -->
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="2" name="Title"/>
+            <p:cNvSpPr>
+              <a:spLocks noGrp="1"/>
+            </p:cNvSpPr>
+            <p:nvPr>
+              <p:ph type="title"/>
+            </p:nvPr>
+          </p:nvSpPr>
+          <p:spPr/>
+          <p:txBody>
+            <a:bodyPr/>
+            <a:lstStyle/>
+            <a:p>
+              <a:r>
+                <a:rPr lang="en-US" b="1" sz="3600"/>
+                <a:t>API and Lambda Functions</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        
+        <!-- Content -->
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="3" name="Content Left"/>
+            <p:cNvSpPr>
+              <a:spLocks noGrp="1"/>
+            </p:cNvSpPr>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="914400" y="1828800"/>
+              <a:ext cx="3657600" cy="3200400"/>
+            </a:xfrm>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr/>
+            <a:lstStyle/>
+            <a:p>
+              <a:r>
+                <a:rPr lang="en-US" b="1" sz="2800"/>
+                <a:t>ExscriboAPI:</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Web API service for client interactions</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Controllers for handling HTTP requests</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Integrates with AWS services</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Deployable as AWS Lambda</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Handles authentication and authorization</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="4" name="Content Right"/>
+            <p:cNvSpPr>
+              <a:spLocks noGrp="1"/>
+            </p:cNvSpPr>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="4572000" y="1828800"/>
+              <a:ext cx="3657600" cy="3200400"/>
+            </a:xfrm>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr/>
+            <a:lstStyle/>
+            <a:p>
+              <a:r>
+                <a:rPr lang="en-US" b="1" sz="2800"/>
+                <a:t>StepFunctionLambda:</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>AWS Lambda functions for processing</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Services for:</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="2"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Transcription processing</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="2"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Custom model training</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="2"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Vocabulary processing</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="2"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Meeting processing</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+      </p:spTree>
+    </p:cSld>
+  </p:sld>
+  
+  <!-- Slide 5: Testing and Deployment -->
+  <p:sld>
+    <p:cSld>
+      <p:spTree>
+        <p:nvGrpSpPr>
+          <p:cNvPr id="1" name=""/>
+          <p:cNvGrpSpPr/>
+          <p:nvPr/>
+        </p:nvGrpSpPr>
+        <p:grpSpPr>
+          <a:xfrm>
+            <a:off x="0" y="0"/>
+            <a:ext cx="0" cy="0"/>
+            <a:chOff x="0" y="0"/>
+            <a:chExt cx="0" cy="0"/>
+          </a:xfrm>
+        </p:grpSpPr>
+        
+        <!-- Title -->
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="2" name="Title"/>
+            <p:cNvSpPr>
+              <a:spLocks noGrp="1"/>
+            </p:cNvSpPr>
+            <p:nvPr>
+              <p:ph type="title"/>
+            </p:nvPr>
+          </p:nvSpPr>
+          <p:spPr/>
+          <p:txBody>
+            <a:bodyPr/>
+            <a:lstStyle/>
+            <a:p>
+              <a:r>
+                <a:rPr lang="en-US" b="1" sz="3600"/>
+                <a:t>Testing and Deployment</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        
+        <!-- Content -->
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="3" name="Content Left"/>
+            <p:cNvSpPr>
+              <a:spLocks noGrp="1"/>
+            </p:cNvSpPr>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="914400" y="1828800"/>
+              <a:ext cx="3657600" cy="3200400"/>
+            </a:xfrm>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr/>
+            <a:lstStyle/>
+            <a:p>
+              <a:r>
+                <a:rPr lang="en-US" b="1" sz="2800"/>
+                <a:t>Testing Framework:</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Located in /test/exscribo.Tests</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Uses xUnit testing framework</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Integration tests for API endpoints</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Custom test ordering with AlphabeticalOrderer</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="4" name="Content Right"/>
+            <p:cNvSpPr>
+              <a:spLocks noGrp="1"/>
+            </p:cNvSpPr>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="4572000" y="1828800"/>
+              <a:ext cx="3657600" cy="3200400"/>
+            </a:xfrm>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr/>
+            <a:lstStyle/>
+            <a:p>
+              <a:r>
+                <a:rPr lang="en-US" b="1" sz="2800"/>
+                <a:t>Deployment:</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>AWS Lambda deployment configurations</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>build.sh script for CI/CD processes</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Serverless templates for infrastructure</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:pPr lvl="1"/>
+              <a:r>
+                <a:rPr lang="en-US" sz="2400"/>
+                <a:t>Code quality with Qodana (qodana.yaml)</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+      </p:spTree>
+    </p:cSld>
+  </p:sld>
+</p:presentation>
