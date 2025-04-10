@@ -13,6 +13,7 @@ from aws_cdk import (
     aws_iam as iam,
     CfnOutput
 )
+from aws_cdk import aws_wafv2 as wafv2
 from cdk_nag import NagSuppressions
 from constructs import Construct
 
@@ -46,6 +47,64 @@ class AuthConstruct(Construct):
             ),
             account_recovery=cognito.AccountRecovery.EMAIL_ONLY,
             removal_policy=RemovalPolicy.DESTROY
+        )
+
+        waf_acl = wafv2.CfnWebACL(self, "CognitoWAFWebACL",
+            default_action=wafv2.CfnWebACL.DefaultActionProperty(
+                allow={}
+            ),
+            scope="REGIONAL",
+            visibility_config=wafv2.CfnWebACL.VisibilityConfigProperty(
+                cloud_watch_metrics_enabled=True,
+                metric_name="CognitoWAFWebACL",
+                sampled_requests_enabled=True
+            ),
+            rules=[
+                # Rate limiting rule
+                wafv2.CfnWebACL.RuleProperty(
+                    name="RateLimitRule",
+                    priority=1,
+                    statement=wafv2.CfnWebACL.StatementProperty(
+                        rate_based_statement=wafv2.CfnWebACL.RateBasedStatementProperty(
+                            aggregate_key_type="IP",
+                            limit=2000  # Requests per 5 minutes per IP
+                        )
+                    ),
+                    action=wafv2.CfnWebACL.RuleActionProperty(
+                        block={}
+                    ),
+                    visibility_config=wafv2.CfnWebACL.VisibilityConfigProperty(
+                        sampled_requests_enabled=True,
+                        cloud_watch_metrics_enabled=True,
+                        metric_name="RateLimitRule"
+                    )
+                ),
+                # AWS Managed Rules - Common Rule Set
+                wafv2.CfnWebACL.RuleProperty(
+                    name="AWSManagedRulesCommonRuleSet",
+                    priority=2,
+                    override_action=wafv2.CfnWebACL.OverrideActionProperty(
+                        none={}
+                    ),
+                    statement=wafv2.CfnWebACL.StatementProperty(
+                        managed_rule_group_statement=wafv2.CfnWebACL.ManagedRuleGroupStatementProperty(
+                            vendor_name="AWS",
+                            name="AWSManagedRulesCommonRuleSet"
+                        )
+                    ),
+                    visibility_config=wafv2.CfnWebACL.VisibilityConfigProperty(
+                        sampled_requests_enabled=True,
+                        cloud_watch_metrics_enabled=True,
+                        metric_name="AWSManagedRulesCommonRuleSet"
+                    )
+                )
+            ]
+        )
+
+        # Associate WAF Web ACL with Cognito User Pool
+        wafv2.CfnWebACLAssociation(self, "CognitoWAFAssociation",
+            resource_arn=self.user_pool.user_pool_arn,
+            web_acl_arn=waf_acl.attr_arn
         )
 
         # Apply the new threat protection settings using L1 construct
