@@ -137,7 +137,8 @@ class BedrockKBConstruct(Construct):
                                 "bedrock:StartIngestionJob",
                                 "bedrock:ListIngestionJobs",
                                 "bedrock:RetrieveAndGenerate",
-                                "bedrock:GetInferenceProfile"
+                                "bedrock:GetInferenceProfile",
+
                             ],
                             resources=[
                                 f"arn:aws:bedrock:{Stack.of(self).region}::foundation-model/amazon.titan-embed-text-v2:0",
@@ -154,12 +155,12 @@ class BedrockKBConstruct(Construct):
 
         vectorCollection.grant_data_access(kb_role)
         kb_role.add_to_policy(storageConstruct.s3_rw_statement)
-        # kb_role.add_to_policy(storageConstruct.s3_list_statement)
+        kb_role.add_to_policy(storageConstruct.s3_list_statement)
 
         self.knowledge_base = aws_bedrock.CfnKnowledgeBase(
             self,
             "ExscriboMultiModalKnowledgeBase",
-            name="ExscriboMultiModalKnowledgeBase",
+            name="ExscriboMultiModalKB",
             description="Exscribo Multi-Modal KnowledgeBase",
             role_arn=kb_role.role_arn,
             knowledge_base_configuration=aws_bedrock.CfnKnowledgeBase.KnowledgeBaseConfigurationProperty(
@@ -257,6 +258,7 @@ class BedrockKBConstruct(Construct):
                     "bedrock:StopIngestionJob",
                     "bedrock:IngestKnowledgeBaseDocuments",
                     "bedrock:GetKnowledgeBaseDocuments",
+
                 ],
                 resources=[
                      self.knowledge_base.attr_knowledge_base_arn,
@@ -265,7 +267,7 @@ class BedrockKBConstruct(Construct):
         )    
  
         self.kb_data_source = aws_bedrock.CfnDataSource(self, "ExscriboMultiModalSource",
-            name="ExscriboMultiModalSource",
+            name="ExscriboMultiModalDataSource",
             knowledge_base_id= self.knowledge_base.ref,  
             description="The Custom data source definition for the Exscribo bedrock knowledge base",
             data_source_configuration=aws_bedrock.CfnDataSource.DataSourceConfigurationProperty(
@@ -326,7 +328,7 @@ class BedrockKBConstruct(Construct):
                     "id": "AwsSolutions-IAM5",
                     "reason": "Cross region inference invoke",
                     "appliesTo": [
-                        f"Resource::arn:aws:bedrock:*:051826721456:inference-profile/us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+                        f"Resource::arn:aws:bedrock:*:{Stack.of(self).account}:inference-profile/us.anthropic.claude-3-7-sonnet-20250219-v1:0",
                     ]
                 }
             ],

@@ -26,7 +26,7 @@ class DatabaseConstruct(Construct):
                 
         # Create database credentials in Secrets Manager with rotation enabled
         self.db_credentials = secrets.Secret(self, "ExscriboDBCredentials",
-            secret_name="exscribo/database/credentials",
+            secret_name="exscribo/database/credential",
             generate_secret_string=secrets.SecretStringGenerator(
                 secret_string_template='{"username": "dbuser"}',
                 generate_string_key="password",

@@ -41,26 +41,7 @@ class ExscriboStack(Stack):
         authenticationConstruct = AuthConstruct(self, "ExscriboAuthentication")
 
 
-        NagSuppressions.add_resource_suppressions_by_path(
-            stack=cdk.Stack.of(self),
-            path="/ExscriboStack/ExscriboNetwork/ApiVpc/Resource",
-            suppressions=[
-                {
-                    "id": "AwsSolutions-VPC7",
-                    "reason": "KB requires full access to the vector collection"
-                }
-            ]
-        )
-        NagSuppressions.add_resource_suppressions_by_path(
-            stack=cdk.Stack.of(self),
-            path="/ExscriboStack/ExscriboNetwork/VPCEndpointSecurityGroup/Resource",
-            suppressions=[
-                {
-                    "id": "AwsSolutions-VPC7",
-                    "reason": "KB requires full access to the vector collection"
-                }
-            ]
-        )
+
 
         # # Create storage infrastructure before database
         storageConstruct = StorageConstruct(self, "ExscriboStorage",
