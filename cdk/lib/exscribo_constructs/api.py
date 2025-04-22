@@ -138,10 +138,10 @@ class ApiConstruct(Construct):
         self.api = apigateway.RestApi(
             self, 
             "ExscriboAPI",
-            # endpoint_configuration=apigateway.EndpointConfiguration(
-            #     types=[apigateway.EndpointType.PRIVATE],
-            #     vpc_endpoints=[networkConstruct.api_gateway_endpoint]
-            # ),
+            endpoint_configuration=apigateway.EndpointConfiguration(
+                types=[apigateway.EndpointType.PRIVATE],
+                vpc_endpoints=[networkConstruct.api_gateway_endpoint]
+            ),
             endpoint_types=[apigateway.EndpointType.REGIONAL],
             rest_api_name="Exscribo API",
             description="API endpoint for the Exscribo platform",
@@ -164,11 +164,11 @@ class ApiConstruct(Construct):
                 principals=[iam.ArnPrincipal("*")],
                 resources=["execute-api/*"],
 
-                # conditions={
-                #     "IpAddress": {
-                #         "aws:SourceIp": [ networkConstruct.vpc.vpc_cidr_block ] #update this to allow internal IP's access to this private API gateway
-                #     }
-                # }
+                conditions={
+                    "IpAddress": {
+                        "aws:SourceIp": [ networkConstruct.vpc.vpc_cidr_block ] #update this to allow internal IP's access to this private API gateway
+                    }
+                }
             )
         )
 
