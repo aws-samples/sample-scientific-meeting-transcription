@@ -5,9 +5,8 @@
 
 // Import AWS Amplify library for authentication and AWS service integration
 import { Amplify } from 'aws-amplify';
+import { cognitoUserPoolsTokenProvider } from 'aws-amplify/auth/cognito';
 
-// Configure Amplify with Cognito authentication settings
-// These environment variables are defined in ui/.env file
 Amplify.configure({
   Auth: {
     Cognito: {
@@ -24,8 +23,18 @@ Amplify.configure({
       loginWith: {
         username: true,
         email: true,
-        phone: false
+        phone: false,
+        oauth: {
+          domain: import.meta.env.VITE_COGNITO_DOMAIN || 'your-domain.auth.us-east-1.amazoncognito.com',
+          scopes: ['openid', 'email', 'profile'],
+          redirectSignIn: [import.meta.env.VITE_REDIRECT_SIGN_IN || 'http://localhost:3000/'],
+          redirectSignOut: [import.meta.env.VITE_REDIRECT_SIGN_OUT || 'http://localhost:3000/'],
+          responseType: 'code'
+        }
       }
     }
   }
 });
+
+// Configure the token provider to handle OAuth redirects
+cognitoUserPoolsTokenProvider.handleSignInRedirect();

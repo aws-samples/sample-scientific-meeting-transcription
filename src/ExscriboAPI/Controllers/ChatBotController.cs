@@ -3,23 +3,19 @@
 
 
 using System.Text.Json;
-using Amazon.Bedrock;
 using Amazon.BedrockAgentRuntime;
 using Amazon.BedrockAgentRuntime.Model;
 using Common.AWSServices;
 using Common.Types.Teams;
 using Microsoft.AspNetCore.Mvc;
 using FilterAttribute = Amazon.BedrockAgentRuntime.Model.FilterAttribute;
-using KnowledgeBaseRetrievalConfiguration = Amazon.BedrockAgentRuntime.Model.KnowledgeBaseRetrievalConfiguration;
 using KnowledgeBaseRetrieveAndGenerateConfiguration = Amazon.BedrockAgentRuntime.Model.KnowledgeBaseRetrieveAndGenerateConfiguration;
-using KnowledgeBaseVectorSearchConfiguration = Amazon.BedrockAgentRuntime.Model.KnowledgeBaseVectorSearchConfiguration;
 using OrchestrationConfiguration = Amazon.BedrockAgentRuntime.Model.OrchestrationConfiguration;
 using QueryTransformationConfiguration = Amazon.BedrockAgentRuntime.Model.QueryTransformationConfiguration;
 using QueryTransformationType = Amazon.BedrockAgentRuntime.QueryTransformationType;
 using RetrievalFilter = Amazon.BedrockAgentRuntime.Model.RetrievalFilter;
 using RetrieveAndGenerateConfiguration = Amazon.BedrockAgentRuntime.Model.RetrieveAndGenerateConfiguration;
 using RetrieveAndGenerateType = Amazon.BedrockAgentRuntime.RetrieveAndGenerateType;
-using SearchType = Amazon.BedrockAgentRuntime.SearchType;
 
 namespace ExscriboAPI.Controllers
 {
