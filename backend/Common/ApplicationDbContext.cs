@@ -1,0 +1,457 @@
+// Copyright © Amazon.com and Affiliates: This deliverable is considered Developed Content as defined in the AWS Service Terms 
+// Sample code, software libraries, command line tools, proofs of concept, templates, or other related technology are provided as AWS Content or Third-Party Content under the AWS Customer Agreement, or the relevant written agreement between you and AWS (whichever applies). You should not use this AWS Content or Third-Party Content in your production accounts, or on production or other critical data. You are responsible for testing, securing, and optimizing the AWS Content or Third-Party Content, such as sample code, as appropriate for production grade use based on your specific quality control practices and standards. Deploying AWS Content or Third-Party Content may incur AWS charges for creating or using AWS chargeable resources, such as running Amazon EC2 instances or using Amazon S3 storage.
+
+
+using System;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using Amazon.SecretsManager.Extensions.Caching;
+using Common.AWSServices;
+using Common.Types;
+using Common.Types.CustomModels;
+using Common.Types.CustomVocabularies;
+using Common.Types.MeetingDocuments;
+using Common.Types.MeetingPromptResponses;
+using Common.Types.Meetings;
+using Common.Types.Prompts;
+using Common.Types.PromptSets;
+using Common.Types.Teams;
+using Common.Types.VocabularyPhrases;
+using Microsoft.EntityFrameworkCore;
+
+namespace Common;
+
+/// <summary>
+/// Main database context for the Exscribo application
+/// Provides access to all database entities and manages database connections
+/// </summary>
+public sealed class ApplicationDbContext : DbContext
+{
+    /// <summary>
+    /// Cache for AWS Secrets Manager to retrieve database connection strings
+    /// </summary>
+    private readonly SecretsManagerCache _secretsCache = new();
+    
+    /// <summary>
+    /// Database context options for configuration
+    /// </summary>
+    private readonly DbContextOptions<ApplicationDbContext>? _options;
+
+    /// <summary>
+    /// Asynchronously saves all changes made in this context to the database
+    /// Updates timestamps and other auto-generated fields before saving
+    /// </summary>
+    /// <param name="cancellationToken">A token to observe while waiting for the task to complete</param>
+    /// <returns>The number of state entries written to the database</returns>
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        GenerateOnUpdate();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Default constructor that creates a new instance with default configuration
+    /// </summary>
+    public ApplicationDbContext()
+    {
+        var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
+        OnConfiguring(optionsBuilder);
+        _options = optionsBuilder.Options;
+    }
+
+    /// <summary>
+    /// Constructor that accepts pre-configured options for the database context
+    /// </summary>
+    /// <param name="options">The options to be used by this context</param>
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+    {
+        _options = options;
+    }
+
+    /// <summary>
+    /// Saves all changes made in this context to the database
+    /// Updates timestamps and other auto-generated fields before saving
+    /// </summary>
+    /// <returns>The number of state entries written to the database</returns>
+    public override int SaveChanges()
+    {
+        GenerateOnUpdate();
+        return base.SaveChanges();
+    }
+
+    /// <summary>
+    /// Updates timestamps and other auto-generated fields for entities being tracked by the context
+    /// Called automatically before saving changes to the database
+    /// </summary>
+    public void GenerateOnUpdate()
+    {
+        var now = DateTime.UtcNow;
+        foreach (var changedEntity in ChangeTracker.Entries())
+        {
+            if (changedEntity.Entity is IEntityDate entity)
+            {
+                switch (changedEntity.State)
+                {
+                    case EntityState.Added:
+                        entity.CreatedAt = now;
+                        entity.UpdatedAt = now;
+                        break;
+
+                    case EntityState.Modified:
+                        Entry(entity).Property(x => x.CreatedAt).IsModified = false;
+                        entity.UpdatedAt = now;
+                        break;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Retrieves the database connection string from AWS Secrets Manager
+    /// </summary>
+    /// <returns>The connection string for the database or null if retrieval fails</returns>
+    private string? GetConnectionStringAsync()
+    {
+        try
+        {
+            string? dbSecretKey = EnvironmentHelper.DB_SECRET_KEY;
+            string dbSecretResponse = _secretsCache.GetSecretString(dbSecretKey).Result;
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            var secretsData = JsonSerializer.Deserialize<DatabaseCredentialsType>(dbSecretResponse, options);
+            return secretsData?.GetConnectionString();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Configures the database context options if they haven't been configured already
+    /// Sets up connection string, retry policies, and AWS X-Ray tracing
+    /// </summary>
+    /// <param name="optionsBuilder">Builder for configuring context options</param>
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            bool isLambda = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME"));
+            if (isLambda)
+            {
+                string? connectionString = GetConnectionStringAsync();
+                optionsBuilder
+                    .UseNpgsql(connectionString, options => options
+                        .EnableRetryOnFailure(3)
+                        .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
+                        .CommandTimeout(100))
+                    .AddXRayInterceptor(true)
+                    .EnableSensitiveDataLogging(false)
+                    .EnableDetailedErrors(false);
+                optionsBuilder.AddXRayInterceptor();
+            }
+            else
+            {
+                var connectionString = "dummyconnection";
+                optionsBuilder.UseNpgsql(connectionString);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Configures conventions for model properties
+    /// Sets up automatic UTC conversion for DateTime properties
+    /// </summary>
+    /// <param name="configurationBuilder">Builder for configuring model conventions</param>
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder.Properties<DateTime>().HaveConversion(typeof(DateTimeToDateTimeUtc));
+    }
+
+    /// <summary>
+    /// Configures the database model and entity relationships
+    /// Sets up table mappings, keys, and property configurations
+    /// </summary>
+    /// <param name="modelBuilder">Builder for creating the database model</param>
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<CustomModelDatabaseType>(entity =>
+        {
+            entity.ToTable("custom_models");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").IsRequired().ValueGeneratedOnAdd()
+                .HasValueGenerator<GuidGenerator>();
+            entity.Property(e => e.ModelName).IsRequired().HasColumnName("modelname").HasMaxLength(255);
+            entity.Property(e => e.Description).HasColumnName("description").HasMaxLength(255);
+            entity.Property(e => e.LanguageCode).HasColumnName("language_code").HasMaxLength(15);
+            entity.Property(e => e.DataAccessRoleArn).HasColumnName("data_access_role_arn").HasMaxLength(55);
+            entity.Property(e => e.TrainingDataS3Uri).HasColumnName("training_data_s3_uri").HasMaxLength(512);
+            entity.Property(e => e.TranscribedDataS3Uri).HasColumnName("transcribed_data_s3_uri").HasMaxLength(512);
+            entity.Property(e => e.TrainingDataS3UriFolder).HasColumnName("training_data_s3_uri_folder").HasMaxLength(512);
+            entity.Property(e => e.ModelSetupProgress).HasColumnName("model_setup_progress").HasMaxLength(3).HasDefaultValue(CustomModelSetupProgressEnum.Created);
+            entity.Property(e => e.PreSignedUrl).HasColumnName("presigned_url").HasMaxLength(4096);
+            entity.Property(e => e.StateMachineExecutionArn).HasColumnName("state_machine_execution_arn").HasMaxLength(255);
+            entity.Property(e => e.TranscribeBaseModel).HasColumnName("transcribe_base_model_name").HasDefaultValue(TranscribeBaseModel.WideBand);
+            entity.Property(e => e.AwsModelStatus).HasColumnName("aws_model_status").HasMaxLength(50);
+            entity.Property(e => e.ModelSetupMessage).HasColumnName("model_setup_status").HasMaxLength(512);
+            entity.Property(e => e.PreSignedUrlExpire).HasColumnName("presigned_url_expire");
+            entity.Property(e => e.Status).HasColumnName("status").HasDefaultValue(StatusEnum.Active);
+            entity.Property(e => e.UpdatedAt).IsRequired().HasColumnName("updated_at");
+            entity.Property(e => e.CreatedAt).IsRequired().HasColumnName("created_at");
+
+            entity.HasMany(x => x.Meetings)
+                .WithOne(x => x.CustomModel)
+                .HasForeignKey(x => x.CustomModelId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+
+        modelBuilder.Entity<MeetingDocumentDatabaseType>(entity =>
+        {
+            entity.ToTable("meeting_documents");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").IsRequired().ValueGeneratedOnAdd()
+                .HasValueGenerator<GuidGenerator>();
+            entity.Property(e => e.TeamId).IsRequired().HasColumnName("team_id");
+            entity.Property(e => e.MeetingId).IsRequired().HasColumnName("meeting_id");
+            entity.Property(e => e.Description).HasColumnName("description").HasMaxLength(255);
+            entity.Property(e => e.Filename).HasColumnName("filename").IsRequired().HasMaxLength(512);
+            entity.Property(e => e.UpdatedAt).IsRequired().HasColumnName("updated_at");
+            entity.Property(e => e.CreatedAt).IsRequired().HasColumnName("created_at");
+        });
+        modelBuilder.Entity<CustomVocabularyDatabaseType>(entity =>
+        {
+            entity.ToTable("custom_vocabularies");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").IsRequired().ValueGeneratedOnAdd()
+                .HasValueGenerator<GuidGenerator>();
+            entity.Property(e => e.TeamId).IsRequired();
+            entity.Property(e => e.VocabularyName).IsRequired().HasColumnName("vocabulary_name").HasMaxLength(255);
+            entity.Property(e => e.Description).HasColumnName("description").HasMaxLength(255);
+            entity.Property(e => e.LanguageCode).HasColumnName("language_code").HasMaxLength(15);
+            entity.Property(e => e.Status).HasColumnName("status").HasDefaultValue(StatusEnum.Active);
+            entity.Property(e => e.CurrentStep).HasColumnName("current_step").HasDefaultValue(CustomVocabularyCurrentStepEnum.Created);
+            entity.Property(e => e.PublishError).HasColumnName("publish_error");
+            entity.Property(e => e.UpdatedAt).IsRequired().HasColumnName("updated_at");
+            entity.Property(e => e.CreatedAt).IsRequired().HasColumnName("created_at");
+
+            entity.HasMany(x => x.Phrases)
+                .WithOne(x => x.CustomVocabulary)
+                .HasForeignKey(x => x.CustomVocabularyId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<VocabularyPhraseDatabaseType>(entity =>
+        {
+            entity.ToTable("vocabulary_phrases");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").IsRequired().ValueGeneratedOnAdd()
+                .HasValueGenerator<GuidGenerator>();
+            entity.Property(e => e.CustomVocabularyId).IsRequired();
+            entity.Property(e => e.TeamId).IsRequired();
+            entity.Property(e => e.Phrase).IsRequired().HasColumnName("vocabulary_name").HasMaxLength(255);
+            entity.Property(e => e.DisplayAs).HasColumnName("display_as").HasMaxLength(255);
+            entity.Property(e => e.UpdatedAt).IsRequired().HasColumnName("updated_at");
+            entity.Property(e => e.CreatedAt).IsRequired().HasColumnName("created_at");
+        });
+
+        modelBuilder.Entity<TeamDatabaseType>(entity =>
+        {
+            entity.ToTable("teams");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").IsRequired().ValueGeneratedOnAdd()
+                .HasValueGenerator<GuidGenerator>();
+            entity.Property(e => e.Team).IsRequired().HasColumnName("team").HasMaxLength(100);
+            entity.Property(e => e.IdpGroup).IsRequired().HasColumnName("idp_group").HasMaxLength(100);
+            entity.Property(e => e.Status).IsRequired().HasColumnName("status").HasDefaultValue(StatusEnum.Active);
+            entity.Property(e => e.UpdatedAt).IsRequired().HasColumnName("updated_at");
+            entity.Property(e => e.CreatedAt).IsRequired().HasColumnName("created_at");
+            entity.HasMany(e => e.Meetings)
+                .WithOne(x => x.Team)
+                .HasForeignKey(e => e.TeamId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasMany(e => e.CustomModels)
+                .WithOne(x => x.Team)
+                .HasForeignKey(e => e.TeamId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasMany(e => e.PromptSets)
+                .WithOne(x => x.Team)
+                .HasForeignKey(e => e.TeamId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasMany(e => e.MeetingPromptResponses)
+                .WithOne(x => x.Team)
+                .HasForeignKey(e => e.TeamId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasMany(e => e.CustomVocabularies)
+                .WithOne(x => x.Team)
+                .HasForeignKey(e => e.TeamId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MeetingDatabaseType>(entity =>
+        {
+            entity.ToTable("meetings");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TeamId).HasColumnName("team_id").IsRequired();
+            entity.Property(e => e.Id).HasColumnName("id").IsRequired().ValueGeneratedOnAdd().HasValueGenerator<GuidGenerator>();
+            entity.Property(e => e.Title).IsRequired().HasColumnName("title").HasMaxLength(255);
+            entity.Property(e => e.UpdatedAt).IsRequired().HasColumnName("updated_at");
+            entity.Property(e => e.CreatedAt).IsRequired().HasColumnName("created_at");
+            entity.Property(e => e.Status).IsRequired().HasColumnName("status").HasDefaultValue(StatusEnum.Active);
+            entity.Property(e => e.Date).IsRequired().HasColumnName("meeting_date");
+            entity.Property(e => e.PreSignedUrl).HasColumnName("pre_signe_url").HasMaxLength(4096);
+            entity.Property(e => e.S3RecordingFullPath).HasColumnName("s3_recording_full_path").HasMaxLength(512);
+            entity.Property(e => e.S3TranscribedFullPath).HasColumnName("s3_transcribed_fullpath").HasMaxLength(512);
+            entity.Property(e => e.StateMachineExecutionArn).HasColumnName("state_machine_execution_arn").HasMaxLength(512);
+            entity.Property(e => e.CurrentStep).HasColumnName("current_step").HasDefaultValue(CurrentStepEnum.Created);
+            entity.Property(e => e.CustomModelId).HasColumnName("custom_model_id");
+            entity.Property(e => e.CustomVocabularyId).HasColumnName("custom_vocabulary_id");
+            entity.Property(e => e.S3OutputBucketName).HasColumnName("s3_output_bucket_name").HasMaxLength(255);
+            entity.Property(e => e.S3OutputKeyName).HasColumnName("s3_output_key_name").HasMaxLength(255);
+            entity.Property(e => e.TranscribeError).HasColumnName("transcribe_error").HasMaxLength(512);
+            entity.Property(e => e.MeetingNotes).HasColumnName("meeting_notes").HasColumnType("text");
+            entity.Property(e => e.MeetingNotesVersion).HasColumnName("meeting_notes_version").HasDefaultValue(1);
+
+            entity.HasMany(x => x.MeetingDocuments)
+                .WithOne(x => x.Meeting)
+                .HasForeignKey(x => x.MeetingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(x => x.MeetingPromptResponses)
+                .WithOne(x => x.Meeting)
+                .HasForeignKey(x => x.MeetingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.CustomModel)
+                .WithMany(x => x.Meetings)
+                .HasForeignKey(x => x.CustomModelId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(x => x.CustomVocabulary)
+                .WithMany(x => x.Meetings)
+                .HasForeignKey(x => x.CustomVocabularyId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(x => x.PromptSet)
+                .WithMany(x => x.Meetings)
+                .HasForeignKey(x => x.PromptSetId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<PromptSetDatabaseType>(entity =>
+        {
+            entity.ToTable("promptsets");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").IsRequired().ValueGeneratedOnAdd()
+                .HasValueGenerator<GuidGenerator>();
+            entity.Property(e => e.PromptSetName).IsRequired().HasColumnName("prompt_set_name").HasMaxLength(100);
+            entity.Property(e => e.Description).IsRequired().HasColumnName("description").HasMaxLength(255);
+            entity.Property(e => e.Status).IsRequired().HasColumnName("status").HasMaxLength(3).HasDefaultValue(StatusEnum.Active);
+            entity.Property(e => e.CreatePromptsFromDescription).HasColumnName("create_prompts_from_description");
+            entity.Property(e => e.UpdatedAt).IsRequired().HasColumnName("updated_at");
+            entity.Property(e => e.CreatedAt).IsRequired().HasColumnName("created_at");
+
+            entity.HasMany(x => x.Prompts)
+                .WithOne(x => x.PromptSet)
+                .HasForeignKey(e => e.PrompSetId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(x => x.Meetings)
+                .WithOne(x => x.PromptSet)
+                .HasForeignKey(x => x.PromptSetId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<PromptDatabaseType>(entity =>
+        {
+            entity.ToTable("prompts");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").IsRequired().ValueGeneratedOnAdd()
+                .HasValueGenerator<GuidGenerator>();
+            entity.Property(e => e.Prompt).IsRequired().HasColumnName("prompt").HasMaxLength(255);
+            entity.Property(e => e.Description).HasColumnName("description").HasMaxLength(255);
+            entity.Property(e => e.PrompSetId).IsRequired().HasColumnName("prompt_set_id");
+            entity.Property(e => e.Status).IsRequired().HasColumnName("status").HasMaxLength(3).HasDefaultValue(StatusEnum.Active);
+            entity.Property(e => e.UpdatedAt).IsRequired().HasColumnName("updated_at");
+            entity.Property(e => e.CreatedAt).IsRequired().HasColumnName("created_at");
+            entity.Property(e => e.Order).IsRequired().HasColumnName("order").HasDefaultValue(1);
+
+            entity.HasOne(x => x.PromptSet)
+                .WithMany(x => x.Prompts)
+                .HasForeignKey(x => x.PrompSetId)
+                .IsRequired();
+        });
+        modelBuilder.Entity<MeetingPromptResponseDatabaseType>(entity =>
+        {
+            entity.ToTable("meeting_prompt_responses");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").IsRequired().ValueGeneratedOnAdd()
+                .HasValueGenerator<GuidGenerator>();
+            entity.Property(e => e.PromptResponse)
+                .IsRequired().HasColumnType("text")
+                .HasColumnName("prompt_response");
+
+            entity.Property(e => e.TeamId).IsRequired().HasColumnName("TeamId").IsRequired();
+            entity.Property(e => e.MeetingId).IsRequired().HasColumnName("MeetingId").IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired().HasColumnName("updated_at");
+            entity.Property(e => e.CreatedAt).IsRequired().HasColumnName("created_at");
+
+
+            entity.HasOne(x => x.Meeting)
+                .WithMany(x => x.MeetingPromptResponses)
+                .HasForeignKey(x => x.MeetingId);
+            entity.HasOne(x => x.Team)
+                .WithMany(x => x.MeetingPromptResponses)
+                .HasForeignKey(x => x.TeamId);
+        });
+    }
+
+    /// <summary>
+    /// Custom models for transcription and language processing
+    /// </summary>
+    public DbSet<CustomModelDatabaseType> CustomModels { get; set; } = null!;
+    
+    /// <summary>
+    /// Teams that organize users and meetings
+    /// </summary>
+    public DbSet<TeamDatabaseType> Teams { get; set; } = null!;
+    
+    /// <summary>
+    /// Documents associated with meetings (transcripts, notes, etc.)
+    /// </summary>
+    public DbSet<MeetingDocumentDatabaseType> MeetingDocuments { get; set; } = null!;
+    
+    /// <summary>
+    /// Meeting records with metadata and relationships
+    /// </summary>
+    public DbSet<MeetingDatabaseType> Meetings { get; set; } = null!;
+    
+    /// <summary>
+    /// Sets of prompts grouped for specific use cases
+    /// </summary>
+    public DbSet<PromptSetDatabaseType> PromptSets { get; set; } = null!;
+    
+    /// <summary>
+    /// Individual prompts used for generating responses
+    /// </summary>
+    public DbSet<PromptDatabaseType> Prompts { get; set; } = null!;
+    
+    /// <summary>
+    /// Custom vocabularies for improved transcription accuracy
+    /// </summary>
+    public DbSet<CustomVocabularyDatabaseType> CustomVocabularies { get; set; } = null!;
+    
+    /// <summary>
+    /// Phrases within custom vocabularies
+    /// </summary>
+    public DbSet<VocabularyPhraseDatabaseType> VocabularyPhrases { get; set; } = null!;
+    
+    /// <summary>
+    /// Responses generated from prompts for specific meetings
+    /// </summary>
+    public DbSet<MeetingPromptResponseDatabaseType> MeetingPromptResponses { get; set; } = null!;
+}
