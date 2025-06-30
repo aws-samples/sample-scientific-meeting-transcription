@@ -162,7 +162,7 @@ import { dateFormatter } from "@utils/dateFormatter";
 import { TeamService } from "@services/team.service";
 import type { TeamRequest, TeamResponse } from "@/src/types/team";
 import { StatusEnum } from "@/src/types/common";
-import Dashboard from "../views/Dashboard.vue";
+import Dashboard from "./Dashboard.vue";
 import { useStore } from "vuex";
 
 export default {

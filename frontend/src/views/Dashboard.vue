@@ -120,7 +120,7 @@ import { useStore } from "vuex";
 import { signOut, getCurrentUser } from "aws-amplify/auth";
 import type { AuthUser } from "aws-amplify/auth";
 import type { RootState } from "../store";
-import VersionDisplay from "../views/VersionDisplay.vue";
+import VersionDisplay from "./VersionDisplay.vue";
 
 // Component name (for debugging)
 defineOptions({
