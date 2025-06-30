@@ -1,85 +1,232 @@
-# Exscribo Code Documentation
+# Exscribo - AI-Powered Meeting Transcription Platform
 
-This document provides an overview of the code structure and key components of the Exscribo project, which is a prototype/demo platform showcasing AWS services for recording transcription and GenAI use cases.
+A comprehensive AWS-based platform for meeting recording, transcription, and AI-powered analysis using Amazon Bedrock, Transcribe, and Step Functions.
 
-## Project Overview
+## 🏗️ Architecture Overview
 
-Exscribo is built with:
-- Backend: .NET 8.0 deployed to Lambda functions
-- Frontend: UI built with Vue.js/TypeScript
-- AWS Services: Transcribe, Bedrock, S3, Step Functions, and more
+```mermaid
+graph TB
+    subgraph "Frontend (Vue.js/TypeScript)"
+        UI[Vue.js UI]
+        Services[Frontend Services]
+    end
+    
+    subgraph "AWS Infrastructure"
+        subgraph "Lambda #1: API Gateway"
+            API[ExscriboAPI<br/>(.NET Lambda)]
+            Controllers[API Controllers]
+        end
+        
+        subgraph "Lambda #2: Step Functions"
+            SF[Step Functions]
+            SFL[StepFunction Lambda<br/>(.NET)]
+            Services2[Processing Services]
+        end
+        
+        subgraph "Shared Library"
+            Common[Common Library<br/>EF Classes, DAO, AWS Services]
+        end
+        
+        subgraph "AWS Services"
+            S3[S3 Storage]
+            Transcribe[Amazon Transcribe]
+            Bedrock[Amazon Bedrock]
+            RDS[PostgreSQL RDS]
+            SSM[Systems Manager]
+        end
+    end
+    
+    UI --> Services
+    Services --> API
+    API --> Controllers
+    Controllers --> SF
+    SF --> SFL
+    SFL --> Services2
+    Services2 --> Transcribe
+    Services2 --> Bedrock
+    API --> Common
+    SFL --> Common
+    Common --> S3
+    Common --> RDS
+    Common --> SSM
+```
 
-## Key Components
+## 📁 Project Structure
 
-### AWS Services Integration
+```
+exscribo/
+├── backend/                    # .NET Backend Services (2 Lambda Codebases)
+│   ├── Common/                 # Central shared library
+│   │   ├── AWSServices/        # AWS service integrations
+│   │   ├── DAO/               # Data access objects & EF classes
+│   │   ├── Types/             # Common data types
+│   │   ├── ApplicationDbContext.cs  # Entity Framework context
+│   │   └── Database interactions & utilities
+│   ├── ExscriboAPI/           # Lambda #1: API Gateway requests
+│   │   └── Controllers/       # REST API controllers
+│   └── StepFunctionLambda/    # Lambda #2: Step Function state updates
+│       └── Services/          # Background processing services
+├── frontend/                  # Vue.js Frontend Application
+│   └── src/
+│       ├── services/          # API service clients
+│       ├── views/             # Vue components/pages
+│       └── types/             # TypeScript type definitions
+└── cdk/                      # AWS CDK Infrastructure
+```
 
-The project extensively uses AWS services through the following components:
+## 🔄 API Flow & Relationships
 
-1. **BedrockClaudeClient**: Handles interactions with Amazon Bedrock Claude model for AI text generation
-   - Manages API requests and response parsing
-   - Configures model parameters and handles errors
+### Meeting Processing Workflow
 
-2. **BedrockKnowledgeBase**: Manages document storage and retrieval in Bedrock Knowledge Base
-   - Provides methods for ingesting binary and text documents
-   - Handles document deletion and status monitoring
+```mermaid
+sequenceDiagram
+    participant UI as Frontend UI
+    participant MS as MeetingService
+    participant MC as MeetingsController
+    participant SF as Step Functions
+    participant TS as TranscribeService
+    participant PS as PromptService
+    participant BR as Bedrock
+    participant S3 as S3 Storage
+    
+    UI->>MS: Create Meeting
+    MS->>MC: POST /teams/{id}/meetings
+    MC->>S3: Generate pre-signed URL
+    MC-->>MS: Return meeting with upload URL
+    MS-->>UI: Meeting created
+    
+    UI->>MS: Start Transcription
+    MS->>MC: PUT /meetings/{id}/start_transcription_processing
+    MC->>SF: Start transcription workflow
+    SF->>TS: Process audio file
+    TS->>S3: Retrieve audio file
+    TS->>BR: Amazon Transcribe
+    TS->>S3: Store transcription
+    
+    UI->>MS: Start Prompt Processing
+    MS->>MC: PUT /meetings/{id}/start_prompt_processing
+    MC->>SF: Start prompt workflow
+    SF->>PS: Process with AI prompts
+    PS->>BR: Amazon Bedrock (Claude/Nova)
+    PS->>S3: Store AI responses
+```
 
-3. **BedrockNovaClient**: Interfaces with Amazon Bedrock Nova model
-   - Similar to Claude client but specific to Nova model
+### Frontend-Backend Service Mapping
 
-4. **EnvironmentHelper**: Centralizes access to environment variables
-   - Validates and retrieves configuration values
-   - Provides access to service ARNs, bucket names, etc.
+| Frontend Service | Backend Controller | Primary Functions |
+|-----------------|-------------------|-------------------|
+| `meeting.service.ts` | `MeetingsController.cs` | CRUD operations, transcription, AI processing |
+| `team.service.ts` | `TeamsController.cs` | Team management |
+| `customModel.service.ts` | `CustomModelsController.cs` | Custom model training |
+| `customVocabulary.service.ts` | `CustomVocabolariesController.cs` | Vocabulary management |
+| `meetingDocuments.service.ts` | `MeetingDocumentsController.cs` | Document handling |
+| `meetingassistant.service.ts` | `ChatBotController.cs` | AI assistant interactions |
 
-5. **InferenceProfiles**: Manages Bedrock inference profiles
-   - Retrieves and filters available inference profiles
+## 🛠️ Core Components
 
-6. **BedrockProcessor**: Processes prompts using Amazon Bedrock
-   - Analyzes meeting content using Claude model
+### Backend Architecture (2 Lambda Codebases)
 
-### API Controllers
+#### Common Library (`Common/`)
+Central shared library containing:
+- **Entity Framework Classes**: Database models and DbContext
+- **DAO Layer**: Data access objects for database interactions
+- **AWS Service Integrations**: Bedrock, S3, Transcribe clients
+- **Common Types**: Shared data structures and enums
+- **Utilities**: Helper classes and configuration management
 
-The API layer includes controllers for various resources:
+#### Lambda #1: API Gateway Handler (`ExscriboAPI/`)
+- **Purpose**: Handles HTTP requests from frontend
+- **Controllers**: REST API endpoints for CRUD operations
+- **Dependencies**: References Common library for data access
 
-1. **MeetingsController**: Manages meeting resources
-   - Creates and updates meetings
-   - Handles transcription processing
-   - Manages meeting notes and analytics
+#### Lambda #2: Step Function Processor (`StepFunctionLambda/`)
+- **Purpose**: Processes Step Function state machine events
+- **Services**: Background processing (transcription, AI analysis)
+- **Dependencies**: References Common library for AWS integrations
 
-2. **Other Controllers**: Handle teams, custom models, vocabularies, etc.
+### Frontend Services (`frontend/src/services/`)
 
-### Step Function Lambda
+#### Core API Services
+```typescript
+// Meeting management
+MeetingService.createMeeting(teamId, meetingData)
+MeetingService.startTranscriptionProcessing(teamId, meetingId)
+MeetingService.startPromptProcessing(teamId, meetingId)
 
-The Step Function Lambda handles various processing tasks:
+// AI Assistant
+MeetingAssistantService.submitQuestion(teamId, meetingId, question)
+```
 
-1. **LambdaEntryPoint**: Main entry point for Step Function requests
-   - Routes requests based on job type
-   - Handles errors and returns appropriate responses
+## 🔧 Key Features
 
-2. **TranscribeService**: Processes transcription requests
-   - Converts audio to text using Amazon Transcribe
-   - Formats and stores transcription results
+### 1. Meeting Lifecycle Management
+- **Creation**: Initialize meeting with metadata
+- **Upload**: Secure S3 pre-signed URL generation
+- **Transcription**: Amazon Transcribe integration
+- **AI Analysis**: Bedrock-powered content analysis
+- **Finalization**: Meeting sealing and archival
 
-### Frontend Services
+### 2. AI-Powered Features
+- **Transcription**: High-accuracy speech-to-text
+- **Summarization**: AI-generated meeting summaries
+- **Action Items**: Automated task extraction
+- **Q&A Assistant**: Interactive meeting analysis
 
-The UI includes services for interacting with the backend:
+### 3. Customization Options
+- **Custom Models**: Tailored transcription models
+- **Vocabularies**: Domain-specific terminology
+- **Prompt Sets**: Configurable AI analysis templates
 
-1. **MeetingService**: Handles meeting-related API calls
-   - Creates, updates, and deletes meetings
-   - Manages transcription processing
+## 🚀 Deployment
 
-2. **ChatbotService**: Manages interactions with the AI assistant
-   - Submits questions and retrieves responses
+The application uses AWS CDK for infrastructure deployment:
 
-## Database Structure
+```bash
+# Backend deployment
+cd backend
+./build.sh
 
-The application uses a PostgreSQL database with tables for:
-- Meetings
-- Teams
-- Custom Models
-- Vocabularies
-- Prompts and Prompt Sets
-- Meeting Documents
+# Frontend deployment  
+cd frontend
+npm run build
 
-## Project Status
+# Infrastructure deployment
+cd cdk
+cdk deploy
+```
 
-This is a prototype/demo platform to showcase AWS services around recording transcription and GenAI use cases. The project was developed as an example and won't be improved or maintained going forward.
+## 🔒 Security Features
+
+- **SSL Enforcement**: All S3 buckets require HTTPS
+- **IAM Roles**: Least-privilege access controls
+- **VPC**: Network isolation and security
+- **Encryption**: KMS encryption for data at rest
+- **Pre-signed URLs**: Secure file upload/download
+
+## 📊 Data Flow
+
+```mermaid
+graph LR
+    A[Audio Upload] --> B[S3 Storage]
+    B --> C[Amazon Transcribe]
+    C --> D[Transcription Text]
+    D --> E[Amazon Bedrock]
+    E --> F[AI Analysis]
+    F --> G[Meeting Insights]
+    G --> H[PostgreSQL Storage]
+```
+
+## 🎯 Use Cases
+
+- **Corporate Meetings**: Automated note-taking and action item extraction
+- **Training Sessions**: Content analysis and key point identification  
+- **Interviews**: Structured transcription and analysis
+- **Conferences**: Multi-speaker transcription with AI insights
+
+## ⚠️ Important Notice
+
+This is a prototype/demo platform showcasing AWS services for recording transcription and GenAI use cases. The project serves as an example implementation and is not intended for production use without proper security hardening and optimization.
+
+## 📝 License
+
+Copyright © Amazon.com and Affiliates. This deliverable is considered Developed Content as defined in the AWS Service Terms.
