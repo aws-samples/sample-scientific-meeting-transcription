@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@aws-amplify/auth": "^6.10.0",
-    "@aws-amplify/ui-vue": "^4.0.0",
+    "@aws-amplify/ui-vue": "^4.4.3",
     "@mdi/font": "^7.4.47",
     "@primevue/themes": "^4.0.0",
     "aws-amplify": "^6.12.1",
