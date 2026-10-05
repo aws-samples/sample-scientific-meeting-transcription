@@ -12,7 +12,7 @@
     <ItemGroup>
         <PackageReference Include="Amazon.Lambda.AspNetCoreServer" Version="9.0.4"/>
         <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.12.3"/>
-        <PackageReference Include="AutoMapper" Version="13.0.1"/>
+        <PackageReference Include="AutoMapper" Version="15.1.1"/>
         <PackageReference Include="AWSSDK.Bedrock" Version="4.0.0-preview.5"/>
         <PackageReference Include="AWSSDK.BedrockAgent" Version="4.0.0-preview.5"/>
         <PackageReference Include="AWSSDK.BedrockRuntime" Version="4.0.0-preview.5"/>
